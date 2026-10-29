@@ -1,0 +1,14 @@
+{
+  "name": "doors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Doors: the call sheet for a drink brand entering a new city (Qloo Agentic Hackathon)",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node scripts/dev.mjs 8789",
+    "test": "node scripts/test.mjs",
+    "precompute": "node scripts/precompute.mjs",
+    "deploy": "wrangler deploy"
+  }
+}

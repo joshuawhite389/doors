@@ -1,0 +1,269 @@
+/* R9 drive mode (ui/drive.js): full screen, dark for the car, big targets (≥ 56 px), one column. */
+.drive{
+  --dv-bg:#101614; --dv-card:#18211E; --dv-ink:#F3F1EC; --dv-ink2:#B9C2BE; --dv-ink3:#7F8A86; --dv-line:#2B3833;
+  --dv-go:#3C8D5A; --dv-go-ink:#fff; --dv-warn:#E07B2A; --dv-warn-soft:#3A2617;
+  position:fixed;inset:0;z-index:1000;background:var(--dv-bg);color:var(--dv-ink);overflow-y:auto;overscroll-behavior:contain;
+  font:17px/1.45 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;color-scheme:dark;
+  padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); /* the top inset is .dv-top's */
+}
+html.driving,html.driving body{overflow:hidden}
+.drive h1,.drive h2{font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0}
+.drive :focus-visible{outline:3px solid #8FD3A8;outline-offset:3px}
+.dv-body{max-width:640px;margin:0 auto;padding:0 16px 120px}
+.dv-top{position:sticky;top:0;z-index:2;background:var(--dv-bg);display:grid;grid-template-columns:56px 1fr;grid-template-rows:auto auto;gap:4px 12px;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 0 12px;border-bottom:1px solid var(--dv-line)}
+.dv-x{width:56px;height:56px;border-radius:50%;border:1px solid var(--dv-line);background:var(--dv-card);color:var(--dv-ink);font-size:22px;grid-row:1/3}
+.dv-day b{display:block;font:700 20px/1.2 "Inter Tight",Inter,sans-serif}
+.dv-day span{color:var(--dv-ink2);font-size:15px}
+.dv-day .dv-ahead{display:block;color:var(--dv-ink2);font-size:14px;line-height:1.35;margin:2px 0}
+.dv-dots{display:flex;gap:6px;flex-wrap:wrap}
+.dv-dots i{width:22px;height:6px;border-radius:3px;background:var(--dv-line)}
+.dv-dots i.on{background:var(--dv-go)} .dv-dots i.cur{background:var(--dv-ink)}
+.dv-door{padding-top:18px}
+.dv-kick{margin:0 0 6px;color:var(--dv-ink2);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em}
+.dv-name{font-size:clamp(34px,9vw,48px);line-height:1.05;font-weight:800;overflow-wrap:anywhere}
+.dv-addr{margin:10px 0 0;color:var(--dv-ink2);font-size:18px}
+.dv-hours{margin:4px 0 0;color:var(--dv-ink3);font-size:15px} .dv-hours b{color:#FFC48F;font-weight:600}
+.dv-why,.dv-talk{margin-top:20px;background:var(--dv-card);border:1px solid var(--dv-line);border-radius:18px;padding:16px 18px}
+.dv-why h2,.dv-talk h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--dv-ink3);margin:12px 0 4px}
+.dv-why h2:first-child,.dv-talk h2:first-child{margin-top:0}
+.dv-why p,.dv-talk p{margin:0}
+.dv-why small{display:block;margin-top:8px;color:var(--dv-ink3);font-size:13px}
+.dv-opener{font-size:19px}
+.dv-talk ul{margin:0;padding-left:20px}
+.dv-talk .dv-mid{margin-top:14px}
+.dv-acts{display:grid;gap:12px;margin-top:22px}
+.dv-big,.dv-mid{border-radius:18px;font:700 20px/1.2 "Inter Tight",Inter,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:0;padding:0 18px;color:var(--dv-ink)}
+.dv-big{min-height:76px;font-size:22px}
+.dv-nav{flex-wrap:wrap;column-gap:10px;row-gap:2px;align-content:center}
+.dv-nav>span,.dv-nav>small{white-space:nowrap}
+.dv-nav>small{font:600 15px/1.2 Inter,sans-serif;color:var(--dv-ink2)}
+.dv-mid{min-height:56px;font-size:17px;font-weight:600}
+.dv-big.primary,.dv-mid.primary{background:var(--dv-go);color:var(--dv-go-ink)}
+.dv-big.line,.dv-mid.line{background:var(--dv-card);border:1px solid var(--dv-line)}
+.dv-big:disabled,.dv-mid:disabled{opacity:.4}
+.dv-sec{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-top:12px}
+.dv-next{margin:0;color:var(--dv-ink2);font-size:15px}
+.dv-safe,.dv-muted{color:var(--dv-ink3);font-size:13px;margin-top:20px}
+.dv-late{background:var(--dv-warn-soft);border:1px solid var(--dv-warn);border-radius:16px;padding:12px 14px;margin-bottom:16px;display:grid;gap:10px}
+.dv-late span{color:var(--dv-ink2);font-size:15px}
+.dv-late .dv-mid{background:var(--dv-warn);color:#1b0f05}
+.dv-late-pick{display:flex;flex-wrap:wrap;gap:8px}.dv-late-pick .dv-chip{min-height:44px}.dv-late-pick .dv-chip[disabled]{opacity:.55}
+.dv-late-acts{display:flex;flex-wrap:wrap;gap:8px}.dv-late-acts .dv-mid{flex:1 1 150px;min-height:48px}
+.dv-late .dv-mid.line{background:transparent;color:var(--dv-ink);border:1px solid var(--dv-warn)} /* End my day: the second way out, quieter than Skip */
+.dv-late-what{margin:0;font-size:15px;color:var(--dv-ink2)} /* what Move them into the coming days would do */
+.dv-stopacts .dv-stopwhat{margin:-6px 0 6px;font-size:14px;color:var(--dv-ink2)} /* Stop for today: under each choice, what it does */
+.dv-empty{padding:40px 0;display:grid;gap:14px}
+.dv-fin .dv-name{font-size:32px}
+/* the "how did it go" sheet */
+.dv-sheet{position:fixed;inset:0;z-index:5;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.dv-sheet-in{background:var(--dv-bg);border-top:1px solid var(--dv-line);border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:94vh;overflow-y:auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+.dv-sheet-in header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dv-sheet-in h2{font-size:22px}
+.dv-sheet-in .dv-x{flex:none}
+.dv-mic{width:100%;min-height:120px;border-radius:24px;border:2px solid var(--dv-go);background:var(--dv-card);color:var(--dv-ink);font:700 22px/1.2 "Inter Tight",Inter,sans-serif}
+.dv-mic.on{background:var(--dv-go);color:#fff;animation:dv-pulse 1.4s ease-in-out infinite}
+@keyframes dv-pulse{50%{box-shadow:0 0 0 10px rgba(60,141,90,.25)}}
+@media (prefers-reduced-motion:reduce){.dv-mic.on{animation:none}}
+.dv-live{min-height:1.4em;color:var(--dv-ink2);margin:8px 0}
+.dv-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 16px}
+.dv-quick .dv-mid:last-child{grid-column:1/-1}
+.dv-type{display:grid;gap:8px;border-top:1px solid var(--dv-line);padding-top:14px}
+.dv-type label{color:var(--dv-ink3);font-size:14px}
+.dv-type textarea{background:var(--dv-card);color:var(--dv-ink);border:1px solid var(--dv-line);border-radius:14px;padding:12px;font:17px/1.4 Inter,system-ui,sans-serif;resize:vertical}
+.dv-said{color:var(--dv-ink2);margin:0 0 8px}
+.dv-readback{font:700 22px/1.3 "Inter Tight",Inter,sans-serif;margin:0}
+.dv-ask{color:#FFC48F;margin-bottom:12px}
+.dv-src{color:var(--dv-ink3);font-size:13px;margin:8px 0 0}
+.dv-err{color:#FFB08A;margin:10px 0 0}
+.dv-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:4;width:min(608px,calc(100% - 32px));background:var(--dv-ink);color:#111;border-radius:16px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.dv-toast span{font-weight:600}
+/* taps go through the toast to the controls under it (webvoice 10-23); its Undo, and words long enough to scroll, take their own */
+.dv-toast{pointer-events:none}.dv-toast button,.dv-toast[data-scroll] span{pointer-events:auto}
+.dv-toast .dv-mid{min-height:48px;background:#111;color:#fff;border:0;flex:none}
+/* the plan toolbar's entry */
+.tools .btn.drive-start{background:var(--green);color:var(--green-ink)}
+@media (min-width:900px){.dv-body{padding-top:12px}}
+/* R9 carry: "Share → Add to Home Screen" hint (iPhone / iPad in a browser tab; ui/carry.js) */
+/* a window shorter than the door's card: Navigate and Done stay pinned to the bottom, so the door's name and why stay
+   at the top instead of scrolling under the day header to reach Done (judge pass 2, 20) */
+@media (max-height:960px){
+  .dv-acts{position:sticky;bottom:0;z-index:2;background:var(--dv-bg);margin-top:16px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));box-shadow:0 -1px 0 var(--dv-line)}
+}
+/* door notes and Ask Doors in drive mode (Jard 2026-10-23) */
+.dv-notes{background:var(--dv-card);border:1px solid var(--dv-line);border-left:4px solid var(--dv-warn);border-radius:14px;padding:12px 14px;margin:12px 0}
+.dv-notes h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--dv-ink2);margin-bottom:6px}
+.dv-notes ul{margin:0;padding:0 0 0 18px}
+.dv-notes li{margin:2px 0;overflow-wrap:anywhere}
+.dv-notes small{color:var(--dv-ink3);font-size:12.5px}
+/* always on screen, clear of Done at the bottom */
+.dv-askfab{position:fixed;top:calc(env(safe-area-inset-top) + 18px);right:calc(env(safe-area-inset-right) + 24px);z-index:5;min-height:48px;padding:0 18px;border-radius:999px;border:2px solid var(--dv-go);background:#1E3328;color:#CFEFDB;font:700 15px Inter,system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);cursor:pointer}
+/* the page's side gutter (Jard 2026-10-23: it sat too close to the right edge): 24px, 16px on a phone */
+@media (max-width:700px){.dv-top{padding-right:136px}.dv-askfab{right:calc(env(safe-area-inset-right) + 16px)}}
+/* Voice on/off (the phone's switch): read-backs spoken or not */
+.dv-voice{grid-column:2;justify-self:start;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--dv-line);background:var(--dv-card);color:var(--dv-ink);font:600 14px Inter,system-ui,sans-serif;cursor:pointer}
+.dv-voice[aria-pressed="false"]{color:var(--dv-ink2)}
+/* the phone's Day tab and a viewed (not current) door */
+.dv-tabs{grid-column:2;display:flex;flex-wrap:wrap;gap:8px}
+.dv-tabs .dv-voice{grid-column:auto}
+.dv-viewing{display:block;width:100%;text-align:left;margin:14px 0 6px;padding:12px 14px;border-radius:12px;border:0;background:#3a2a16;color:#FFD9A8;font:600 15px Inter,system-ui,sans-serif;cursor:pointer}
+.dv-daylist ol{list-style:none;margin:12px 0 0;padding:0}
+/* the Day tab's map (the phone's DayMap): the start, numbered doors, the road or the dashed estimate, its source */
+.dv-mapbox{position:relative;height:clamp(220px,42vh,380px);border-radius:12px;overflow:hidden;border:1px solid var(--dv-line);background:#F3F0E8}
+.dv-mapgl{position:absolute;inset:0}
+.dv-mapsrc{position:absolute;right:8px;top:8px;margin:0;padding:3px 8px;border-radius:8px;background:rgba(250,247,242,.92);color:#6b6258;font-size:12px;pointer-events:none}
+.dv-mapsrc:empty{display:none}
+.dv-row{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:14px 8px;border:0;border-bottom:1px solid var(--dv-line);background:none;color:var(--dv-ink);cursor:pointer}
+.dv-row b{width:24px;text-align:right;color:var(--dv-ink2);font-size:17px}
+.dv-row span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dv-row i{font-style:normal;font-weight:600;font-size:17px}
+.dv-row small{color:var(--dv-ink2);font-size:14px}
+.dv-row.here{background:var(--dv-card);border-radius:12px}
+.dv-row.done i{text-decoration:line-through;color:var(--dv-ink3)}
+@media (max-width:700px){.dv-tabs{grid-column:1/-1;margin-right:-120px}} /* a full row under the X, below Ask Doors */
+/* the day flow (Jard 10-23): Pause, Remove from today, End my day, and the Day done debrief */
+.dv-pause{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:15px;line-height:1}
+.dv-pause small{font:600 11px/1 Inter,system-ui,sans-serif;color:var(--dv-ink2)}
+.dv-off{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.dv-off .dv-mid{flex:1 1 160px;min-height:48px;font-size:15px;color:var(--dv-ink2)}
+.dv-chip{border:1px solid var(--dv-go);background:transparent;color:var(--dv-ink);border-radius:999px;min-height:40px;padding:0 14px;font:600 14px/1 Inter,system-ui,sans-serif;justify-self:start}
+.dv-fin .dv-addr{font-size:17px}
+.db-counts{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:0}
+.db-counts li{background:var(--dv-card);border:1px solid var(--dv-line);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--dv-ink2)}
+.db-counts b{color:var(--dv-ink);font-size:16px;margin-right:2px}
+.db-counts .db-interested b{color:#7FD3A0} .db-counts .db-followup b{color:#FFC48F} .db-counts .db-notvisited{border-style:dashed}
+.db-sec{margin-top:24px}
+.db-sec h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--dv-ink3);margin:0 0 8px}
+.db-steps,.db-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.db-steps li{background:var(--dv-card);border:1px solid var(--dv-line);border-radius:14px;padding:12px 14px;display:grid;gap:6px}
+.db-steps li span{color:var(--dv-ink2);font-size:15px}
+.db-row{background:var(--dv-card);border:1px solid var(--dv-line);border-radius:14px}
+.db-row summary{list-style:none;display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:12px 14px;cursor:pointer;min-height:48px}
+.db-row summary::-webkit-details-marker{display:none}
+.db-row summary i{font-style:normal;font-weight:700;color:var(--dv-ink3);text-align:right}
+.db-row summary b{display:block;font-size:17px}
+.db-row summary small{display:block;color:var(--dv-ink2);font-size:14px;margin-top:2px}
+.db-row summary em{font-style:normal;font-size:13px;color:var(--dv-ink3)}
+.db-row[open] summary em{visibility:hidden}
+.db-row.off{border-style:dashed}
+.db-row > :not(summary){margin:0 14px 12px 52px}
+.db-notes{padding:0;list-style:none;display:grid;gap:6px}
+.db-notes li{font-size:16px} .db-notes small{color:var(--dv-ink3);font-size:12px}
+.db-none{color:var(--dv-ink3);font-size:14px}
+.dv-bars{display:flex;gap:4px;height:14px} .dv-bars i{width:4px;border-radius:1px;background:var(--dv-ink)}
+/* dayflow2 (mobile2 10-23): End my day's doors on the next day, with Undo / Choose another day; a capped toast */
+.db-acts{display:flex;flex-wrap:wrap;gap:8px}
+a.dv-chip{display:inline-flex;align-items:center;text-decoration:none}
+/* large text (200% zoom, a big default size): the toast never takes more than a third of the window; its words scroll */
+.dv-toast{max-height:33vh}
+.dv-toast span{max-height:calc(33vh - 20px);overflow-y:auto;overflow-wrap:anywhere}
+/* a note on the door (PARITY M1, as the phone): the wide mic, "Or type a note", the box with Save note / Cancel */
+.dv-notemic{min-height:64px;margin-top:10px;font-size:18px;border-radius:16px}
+.dv-notelive{min-height:0;color:var(--dv-ink2);margin:6px 0 0}
+.dv-notelive:empty{display:none}
+.dv-link{background:none;border:0;padding:0;min-height:44px;color:var(--dv-go);font:700 16px Inter,system-ui,sans-serif;cursor:pointer;text-align:left}
+.dv-noteform{border-top:0;padding-top:10px}
+.dv-notebtns{display:flex;gap:8px}
+.dv-notebtns .dv-mid{flex:1}
+/* Navigate opens the rep's app (PARITY S14): "Opens Google Maps · Change", then the three choices */
+.dv-navwith{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:4px;color:var(--dv-ink3);font-size:14px}
+.dv-navwith .dv-link{font-size:14px;font-weight:500;color:var(--dv-ink3)}
+.dv-navwith .dv-link b{color:var(--dv-go)}
+.dv-navwith .dv-mid{flex:1 1 auto;min-width:0}
+/* "Running late" said by the rep (ease audit #7) */
+.dv-latectl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+/* ease audit 3 #5: Running late sits by Navigate and Log visit (it was two screens down), as on the phone: beside
+   Navigate on one row, so the pinned footer is no taller; its picks take a row of their own */
+.dv-acts{grid-template-columns:auto minmax(0,1fr)}
+.dv-acts>*{grid-column:1/-1}
+.dv-acts .dv-latectl{margin-top:0}
+.dv-acts .dv-latectl:not(:has(.dv-chip)){grid-column:1}
+.dv-acts .dv-latectl:not(:has(.dv-chip)) .dv-mid{height:100%;min-height:56px;padding:0 14px}
+.dv-acts .dv-latectl:not(:has(.dv-chip)) + [data-drive-nav]{grid-column:2}
+.dv-latectl>span{flex:1 0 100%;font-size:15px;color:var(--dv-ink2)}
+.dv-latectl .dv-chip{min-height:44px}
+.dv-latectl .dv-chip[aria-pressed="true"]{background:var(--dv-go);color:#fff}
+.dv-latectl .dv-mid{flex:1 1 160px;min-height:48px;font-size:15px;color:var(--dv-ink2)}
+/* intuit audit 1b #1: a small screen (≤ 420 px wide or ≤ 700 px tall) was all header (~300 px of 568 at 320 wide):
+   the day in one line ("Tue Oct 27 · 0 of 9 done"), the preview note in one short line, the dots on one row, the ✕ and
+   Agent at 44 px in that row, and the header scrolls away with the page, so the door's name and opener show at once */
+.dv-day .dv-line{display:none}
+@media (max-width:420px),(max-height:700px){
+  .dv-top{position:static;grid-template-columns:44px minmax(0,1fr) auto;grid-template-rows:auto;gap:8px 8px;padding:calc(8px + env(safe-area-inset-top)) 0 10px}
+  .dv-x{width:44px;height:44px;font-size:18px;grid-row:1}
+  .dv-pause small{font-size:10px}
+  .dv-day{min-width:0}
+  .dv-day:has(.dv-line)>b:not(.dv-line),.dv-day:has(.dv-line)>span,.dv-day:has(.dv-line)>.dv-ahead:not(.dv-line){display:none}
+  .dv-day .dv-line{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dv-day b.dv-line{font-size:17px}
+  .dv-day .dv-ahead.dv-line{font-size:13px;margin:0}
+  .dv-day{grid-column:2/-1}
+  .dv-dots{grid-column:1/-1;grid-row:2;flex-wrap:nowrap;gap:4px}
+  .dv-dots i{flex:1 1 0;width:auto;min-width:4px;max-width:22px}
+  /* the day's buttons and Agent share the row under the dots (Agent beside the title cut it to "Tue Oct 27 · 0 of …") */
+  .dv-tabs{grid-column:1/3;grid-row:3;margin-right:0;gap:6px}
+  .dv-tabs .dv-voice{min-height:44px;padding:0 10px}
+  .dv-askfab{position:static;grid-column:3;grid-row:3;align-self:start;min-height:44px;padding:0 12px;font-size:14px;box-shadow:none}
+  .dv-door{padding-top:10px}
+  .dv-kick{font-size:13px;margin-bottom:2px}
+  .dv-name{font-size:28px}
+  .dv-addr{margin-top:4px;font-size:16px}
+  .dv-talk,.dv-why{margin-top:12px;padding:12px 14px}
+  .dv-opener{font-size:18px}
+  .dv-acts{gap:8px;margin-top:12px;padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .dv-big{min-height:56px;font-size:20px}
+  .dv-acts .dv-latectl:not(:has(.dv-chip)) .dv-mid{min-height:48px}
+}
+/* intuit pass 2 #3: "Ask for …" is one line over the opener (the label inline, as the door card's first line) */
+.dv-askfor{margin:0 0 10px !important;font-size:15px;color:var(--dv-ink2)}
+.dv-askfor span{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--dv-ink3);margin-right:4px}
+@media (max-width:420px){.dv-askfor{font-size:14px;margin-bottom:8px !important}}
+/* at 320 the two-line address and the Ask for line left the opener 2 lines: the address keeps one line (Navigate has all of it) */
+@media (max-width:360px){.dv-askfor{font-size:13px;margin-bottom:6px !important}.dv-askfor span{font-size:11px;letter-spacing:.04em;margin-right:2px}
+  .dv-addr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+/* group 3 #8: the hands-free Agent (ui/handsfree.js): one big state, the answer in large type, no chat box */
+/* the hands-free Agent (ui/handsfree.js): a bar docked under the drive screen, always on while Voice is on */
+:root{--hf-h:168px}
+html.hf-open .drive{bottom:var(--hf-h)}
+html.hf-open .dv-toast{bottom:calc(var(--hf-h) + 12px)}
+/* the Log visit sheet and the chat panel sit over the whole viewport: above the bar, never under it (a Log it under the
+   bar took the tap for the bar: drive-cdp, 10-28) */
+html.hf-open .dv-sheet{bottom:var(--hf-h)}
+html.hf-open .dv-sheet-in{max-height:calc(100vh - var(--hf-h))}
+html.hf-open.driving .agentpanel{bottom:calc(var(--hf-h) + 12px);height:min(620px,calc(100vh - var(--hf-h) - 24px))}
+.hf{position:fixed;left:0;right:0;bottom:0;height:var(--hf-h);z-index:1200;background:#0B100E;color:#F3F1EC;border-top:1px solid #2B3833;padding:12px max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
+.hf[hidden]{display:none}
+.hf-in{max-width:640px;margin:0 auto;height:100%;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:8px 14px;align-items:start}
+.hf-big{grid-row:1/3;width:96px;height:96px;border-radius:50%;border:3px solid #3C8D5A;background:#1E3328;color:#F3F1EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font:700 13px/1.15 Inter,system-ui,sans-serif;padding:8px;text-align:center;align-self:center}
+.hf-big:focus-visible{outline:3px solid #CFEFDB;outline-offset:4px}
+.hf-dot{width:18px;height:18px;border-radius:50%;background:#3C8D5A}
+.hf[data-phase="listen"] .hf-big,.hf[data-phase="reading"] .hf-big{border-color:#6FD394;box-shadow:0 0 0 0 rgba(111,211,148,.5);animation:hf-pulse 1.6s ease-out infinite}
+.hf[data-phase="listen"] .hf-dot{background:#6FD394}
+.hf[data-phase="think"] .hf-big{border-color:#B9C2BE;background:#18211E}
+.hf[data-phase="think"] .hf-dot{background:#B9C2BE;animation:hf-blink 1s ease-in-out infinite}
+.hf[data-phase="speak"] .hf-big{border-color:#F3F1EC}
+.hf[data-phase="speak"] .hf-dot{background:#F3F1EC;animation:hf-blink 1.2s ease-in-out infinite}
+.hf[data-phase="muted"] .hf-big,.hf[data-phase="off"] .hf-big,.hf[data-phase="paused"] .hf-big{border-color:#2B3833;background:#18211E}
+.hf[data-phase="muted"] .hf-dot,.hf[data-phase="off"] .hf-dot,.hf[data-phase="paused"] .hf-dot{background:#7F8A86}
+@keyframes hf-pulse{to{box-shadow:0 0 0 14px rgba(111,211,148,0)}}
+@keyframes hf-blink{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.hf-big,.hf-dot{animation:none!important}}
+.hf-text{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;align-self:stretch}
+.hf-hint{margin:0;color:#B9C2BE;font-size:15px;line-height:1.35}
+.hf-hint:empty{display:none}
+.hf-words{margin:0;color:#B9C2BE;font-size:14px;line-height:1.35}
+.hf-words span{color:#7F8A86;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+.hf-words:empty{display:none}
+.hf-answer{margin:0;font-size:17px;line-height:1.4}
+.hf-answer:empty{display:none}
+.hf-note{margin:0;color:#FFC48F;font-size:14px}
+.hf-why{margin:0;color:#B9C2BE;font-size:14px;line-height:1.35}
+.hf-why[hidden],.hf-debug[hidden]{display:none}
+.hf-debug{margin:0;color:#7F8A86;font:11px/1.3 ui-monospace,Menlo,monospace;word-break:break-word;user-select:all}
+.hf-row{grid-column:2;display:flex;gap:8px;flex-wrap:wrap}
+.hf-btn{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #2B3833;background:#18211E;color:#F3F1EC;font:600 15px Inter,system-ui,sans-serif;cursor:pointer}
+.hf-btn[aria-pressed="true"]{background:#F3F1EC;color:#0B100E;border-color:#F3F1EC}
+@media (min-width:700px){:root{--hf-h:150px}.hf-big{width:104px;height:104px;font-size:14px}.hf-answer{font-size:18px}}
+/* Read it to me / Say it again while they read (Jard 10-28: a tap showed nothing): pressed, "Reading…", and a Stop */
+.dv-mid.reading,.dv-big.reading{background:#CFEFDB;color:#0B100E;border-color:#CFEFDB}
+.dv-readrow{display:flex;gap:8px;margin-top:14px}.dv-readrow .dv-mid{flex:1 1 auto;margin-top:0}.dv-readrow .dv-stop{flex:0 0 auto;min-width:88px}

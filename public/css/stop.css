@@ -1,0 +1,432 @@
+/* C1 · the stop (frames 5, 7), the outcome sheet, outcome tags and the printable call sheet. Loaded by ui/stop.js. */
+.stopview{display:flex;flex-direction:column;min-height:0;flex:1;background:var(--paper);position:relative}
+/* the open stop folds the list away, never "Why these rooms?" (H3: with both on, the left column went blank) */
+@media (min-width:701px){.rcol.stopping>:not(.stopview):not(#why){display:none !important}}
+.shead{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 10px 12px;border-bottom:1px solid var(--line2);font-size:14px;color:var(--ink2);flex:none}
+.sback{border:0;background:transparent;padding:6px 8px;border-radius:8px;color:var(--ink2);font-size:14px}
+.sback:hover{background:var(--bg);color:var(--ink)}
+.snav{display:flex;align-items:center;gap:4px}
+.snav button{border:1px solid var(--line);background:var(--paper);width:30px;height:30px;border-radius:50%;font-size:18px;line-height:1;color:var(--ink)}
+.snav button:disabled{opacity:.35;cursor:default}
+.snav span{padding:0 6px;white-space:nowrap}
+.shead{flex-wrap:wrap}
+.sname{flex:1 0 100%;padding:4px 8px 0;font:600 15px Inter,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sname[hidden]{display:none}
+.grab{display:none}
+.sscroll{overflow:auto;flex:1;min-height:0;padding-bottom:18px}
+.shero{height:96px;background:var(--line2);position:relative;margin-bottom:18px}
+.shero img{width:100%;height:100%;object-fit:cover;display:block}
+.shero.noimg{height:36px;background:transparent;margin-bottom:22px}
+.spin{position:absolute;left:22px;bottom:-15px;width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font:700 14px "Inter Tight",Inter,sans-serif;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.sbody{padding:4px 22px 0}
+.skick{font-size:13px;color:var(--ink3);margin-bottom:2px}
+.skick b{color:var(--ink);font-weight:600}
+.snote{border-top:0;padding-top:4px}
+.oquick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.oquick .btn{white-space:normal;padding:12px 10px;font-size:14px}
+#o-more{margin-top:12px}
+.sbody h2{font-size:22px;font-weight:700;line-height:1.2;outline:0}
+.sbody .kv{color:var(--ink2);font-size:13px;margin:4px 0 10px}
+.souts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px}
+.otag{font-size:12px;border-radius:99px;padding:2px 10px;background:var(--seg);color:var(--ink2);font-weight:500}
+.otag.ok{background:#E3F1E8;color:var(--done)}
+.otag.fu{background:var(--amber-soft);color:var(--warn-ink)}
+.onote{font-size:12.5px;color:var(--ink3)}
+.sbody .rankline b{font-family:"Inter Tight",Inter,sans-serif;font-size:15px}
+.facts2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.facts2 div{background:var(--bg);border-radius:10px;padding:6px 9px;font-size:11.5px;color:var(--ink3);min-width:0}
+.facts2 b{display:block;font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.facts2 b.warn{color:#A4441A}
+.facts2 a{text-decoration:none;color:var(--ink)}
+.facts2 a:hover{text-decoration:underline}
+.sect{border-top:1px solid var(--line2);padding:14px 0}
+.sect h4{margin:0 0 8px;font:600 12px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;gap:8px}
+.sect h4 span{text-transform:none;letter-spacing:0;font-weight:500}
+.sect p{margin:0 0 8px;font-size:14px}
+.sect .cap{font-size:12px;color:var(--ink3);margin:6px 0 0}
+/* WHY-VIZ-SPEC §6: rarity chips in place of the crowd line */
+.rchips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 0}
+.rchip{background:#E6EEE9;border-radius:99px;padding:4px 10px;font-size:13px;white-space:nowrap}
+.rchip b{color:#1F7F58;font-weight:600;margin-left:5px}
+.dabout .rline{font-size:12px;color:var(--ink3);margin:4px 0 0}
+.mail{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.mail .subj{width:100%;border:0;background:transparent;font:600 13.5px/1.4 Inter,system-ui,sans-serif;padding:4px 0 6px;border-bottom:1px solid var(--line);margin-bottom:6px;outline:0;resize:none;display:block}
+.mail textarea{width:100%;border:0;background:transparent;resize:vertical;font:13.5px/1.5 Inter,system-ui,sans-serif;padding:2px 0;outline:0;min-height:150px}
+.mail textarea.subj{min-height:0}
+.mail .subj:focus,.mail textarea:focus{background:var(--paper);border-radius:6px;box-shadow:0 0 0 3px var(--green)}
+.mail .act{display:flex;gap:8px;margin:0 0 8px;flex-wrap:wrap}
+.mail .act a{text-decoration:none}
+.talk .tp{margin-bottom:12px}
+.talk h5{margin:0 0 4px;font:600 13.5px "Inter Tight",Inter,sans-serif;color:var(--ink);letter-spacing:0}
+.talk ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+.talk li{margin-bottom:3px}
+.talk .opener{background:var(--green-soft);color:var(--green);border-radius:10px;padding:8px 12px;font-size:14px;margin:0}
+.talk .ask-note{font-size:12.5px;color:var(--warn-ink);background:var(--amber-soft);display:inline-block;border-radius:99px;padding:2px 10px;margin:0 0 6px}
+.talk ul.ticks{list-style:none;padding-left:0}
+.talk .ticks label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;padding:3px 0}
+.talk .ticks input{margin-top:3px;flex:none;width:16px;height:16px;accent-color:var(--done)}
+.talk .ticks input:checked+span{color:var(--ink3);text-decoration:line-through}
+.talk .by{font:500 10.5px Inter,sans-serif;color:var(--ink3);background:var(--seg);border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:1px;text-decoration:none;display:inline-block}
+.talk sup a{color:var(--green);text-decoration:none;font-weight:600;padding:0 2px}
+.push{margin:0;font-size:13.5px}
+.push dt{font-weight:600;color:var(--ink)}
+.push dd{margin:0 0 6px;color:var(--ink2)}
+.theask p{font-weight:600;font-size:15px;color:var(--ink)}
+.fns{font-size:12px;color:var(--ink3);margin:4px 0 0;padding-left:18px}
+.fns a{color:var(--ink3)}
+.fold{border-top:1px solid var(--line2);font-size:14px}
+.fold summary{cursor:pointer;padding:12px 0;color:var(--ink2);list-style:none;display:flex;justify-content:space-between}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary:after{content:"›";color:var(--ink3);transition:transform .2s}
+.fold[open] summary:after{transform:rotate(90deg)}
+.fold .cap{font-size:12px;color:var(--ink3);margin:0 0 8px}
+.sis{list-style:none;margin:0 0 12px;padding:0}
+.sis li{padding:4px 0;display:flex;justify-content:space-between;gap:8px}
+.rec{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:12.5px;margin:0 0 10px}
+.rec dt{color:var(--ink3)}
+.rec dd{margin:0;word-break:break-word}
+.rec code{font-size:11px}
+.rec .week{list-style:none;margin:0;padding:0;font-variant-numeric:tabular-nums}
+.sfoot{border-top:1px solid var(--line);padding:12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--paper);flex:none}
+.ssec{display:flex;gap:8px;justify-content:flex-start}
+.sbtns{display:flex;gap:8px;align-items:center}
+.sbtns .btn.primary{flex:1;padding:13px}
+.sdone{font-size:13.5px;color:var(--done)}
+.sdone b{font-family:"Inter Tight",Inter,sans-serif}
+.callbtn{display:none}
+.ohost:not(.on){display:none}
+.ohost.on{position:absolute;inset:0;z-index:5;background:rgba(23,25,27,.28);display:flex;align-items:flex-end}
+.osheet{background:var(--paper);width:100%;border-radius:20px 20px 0 0;padding:18px 20px 20px;box-shadow:0 -10px 30px rgba(0,0,0,.15);max-height:100%;overflow:auto}
+.osheet h3{font-size:18px;margin-bottom:12px}
+.ores{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.ores .tog[aria-checked=true]{background:var(--green);border-color:var(--green);color:#fff;font-weight:500}
+.orow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;font-size:14px}
+.orow>label:not(.check){font-weight:600;width:100%}
+.orow .check{margin:0}
+.orow textarea.inp{display:block;min-height:60px;resize:vertical;font:14px/1.45 Inter,system-ui,sans-serif}
+.olbl{font-weight:600}
+.dt{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper)}
+.oerr{color:#A4441A;font-size:13px;margin-bottom:8px}
+.oact{display:flex;gap:8px;justify-content:flex-end}
+.stoast{position:absolute;left:12px;right:12px;bottom:auto;top:52px;z-index:6;background:var(--ink);color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;display:flex;gap:12px;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+.stoast .lnk{color:#fff}
+
+/* list rows: outcome tags (plan.js) */
+.tg.ok{background:#E3F1E8;color:var(--done)}
+.tg.fu{background:var(--amber-soft);color:var(--warn-ink)}
+.tg.no{background:var(--chip);color:var(--ink2)}
+.mpin.fu{box-shadow:0 0 0 3px var(--amber-soft),0 2px 6px rgba(0,0,0,.25)}
+
+/* export drawer */
+.xlist{list-style:none;margin:6px 0 0;padding:0}
+.xlist li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line2)}
+.xlist li div{min-width:0}
+.callsheet-print{display:none}
+
+/* ---------- phone: a bottom sheet over the map ---------- */
+@media (max-width:700px){
+  .stopview{position:fixed;left:0;right:0;bottom:0;height:60vh;height:60dvh;z-index:40;border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.16);transition:height .25s ease}
+  .stopview.full{height:94vh;height:94dvh}
+  .grab{display:block;position:absolute;top:0;left:50%;transform:translateX(-50%);border:0;background:transparent;width:90px;height:22px;padding:0;z-index:2;touch-action:none}
+  .grab i{display:block;width:40px;height:5px;border-radius:9px;background:#D5D3CD;margin:8px auto 0}
+  .shead{padding:20px 12px 6px;border-bottom:0;touch-action:none}
+  .shero{height:0;margin:0;overflow:visible}
+  .shero img{display:none}
+  .spin{display:none}
+  .sbody{padding:4px 18px 0}
+  .sbody h2{font-size:21px}
+  .callbtn{display:inline-flex}
+  .sfoot{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .ssec{justify-content:flex-end}
+  .ssec .btn{padding:4px 10px;font-size:12.5px;border:0;background:transparent;color:var(--ink2);text-decoration:underline;text-underline-offset:2px}
+  .rec{grid-template-columns:1fr}
+  .rec dd{margin-bottom:6px}
+  html.sheet-open .appfoot{padding-bottom:62vh}
+}
+@media (prefers-reduced-motion:reduce){.stopview{transition:none}}
+
+/* ---------- print: the call sheet only ---------- */
+/* G2 (owner review 2): every line wraps inside the page. The page's own layout (a full-height app, nowrap/ellipsis
+   rules) is reset; a stop starts a page and may run onto the next, never clipped at the edge or the bottom. */
+@media print{
+  @page{margin:14mm 15mm 16mm}
+  html,body{width:auto !important;min-width:0 !important;height:auto !important;overflow:visible !important;background:#fff !important}
+  body>*:not(.callsheet-print){display:none !important}
+  .callsheet-print{display:block !important;position:static !important;width:auto !important;max-width:100%;color:#000;font:10.5pt/1.42 Inter,system-ui,sans-serif}
+  .callsheet,.callsheet *{box-sizing:border-box;max-width:100%;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;overflow-wrap:break-word}
+  .callsheet header{border-bottom:1.5pt solid #000;padding-bottom:6pt;margin-bottom:4pt}
+  .callsheet h1{font-size:17pt;line-height:1.2;margin:0 0 3pt}
+  .callsheet .cs-sub{font-size:9.5pt;color:#444;margin:0}
+  .cs-stop{padding:10pt 0 0}
+  .cs-stop+.cs-stop{break-before:page;page-break-before:always}
+  .cs-stop h2{font-size:14pt;line-height:1.25;margin:0 0 2pt}
+  .cs-stop h3{font-size:10pt;text-transform:uppercase;letter-spacing:.04em;color:#333;margin:9pt 0 2pt;break-after:avoid;page-break-after:avoid}
+  .cs-stop h3 small{font-weight:400;text-transform:none;letter-spacing:0}
+  .cs-stop p,.cs-stop ul{margin:2pt 0}
+  .cs-stop ul{padding-left:15pt}
+  .cs-stop li{margin:1.5pt 0;break-inside:avoid;page-break-inside:avoid}
+  .cs-q{list-style:none;padding-left:0 !important}
+  .cs-q li{padding-left:1.4em;text-indent:-1.4em}
+  .cs-box{display:inline-block;width:.8em;height:.8em;border:1pt solid #000;border-radius:1.5pt;margin-right:.6em;vertical-align:-.05em;text-indent:0}
+  .cs-where,.cs-by{color:#555;font-size:9pt}
+  .cs-rank{font-weight:600}
+  .cs-facts{font-size:9.5pt}
+  .cs-ask{border:1pt solid #000;border-radius:4pt;padding:5pt 8pt;margin-top:3pt !important}
+  .callsheet sup{font-size:7pt;line-height:0}
+  .callsheet footer{font-size:8.5pt;color:#333;border-top:1pt solid #999;margin-top:14pt;padding-top:6pt;break-inside:avoid}
+  .callsheet footer h3{font-size:10pt;margin:0 0 3pt}
+  .callsheet footer ol{margin:0;padding-left:15pt}
+  .callsheet footer li{overflow-wrap:anywhere;margin:1.5pt 0}
+}
+
+/* R2 L9: the building phase's one-day miles chip never sits over the Week view */
+.mapwrap.is-week .bmiles{display:none !important}
+.skick span{white-space:nowrap}
+/* R2 Calacanis 15: a planner note never shrinks under the list it sits above (it overlapped the Week's first rows) */
+#p-body>.rhead,#p-body>.pnotes{flex:none}
+/* phone: the building pill and the miles card stay off the week chips and off Run the route */
+@media (max-width:900px){
+  .mapwrap.is-week .bpill{display:none !important}
+  .mapwrap .bmiles{left:auto;right:12px;bottom:auto;top:56px;text-align:right}
+}
+/* a scrolled list reads as clipped under the note, not covered by it */
+#p-body>.pnotes+.stops{margin-top:10px;border-top:1px solid var(--line2)}
+
+/* ---------- G5 · the Qloo room deep-dive (ui/room.js) and its links from the stop ---------- */
+.lnk.rv-open{display:inline-block;margin-top:4px;font-weight:600;color:var(--green);text-decoration:none;font-size:14px;padding:4px 0;border:0;background:transparent}
+.lnk.rv-open:hover{text-decoration:underline}
+.whymatch{font-size:13px !important;color:var(--ink2)}
+.whymatch b{font-family:"Inter Tight",Inter,sans-serif;color:var(--green);font-size:15px}
+.sis li{align-items:center}
+.sis li>div{min-width:0;display:flex;flex-direction:column}
+.sis li small{font-size:12px;color:var(--ink3);line-height:1.35}
+.sis .btn.sm{padding:5px 10px;font-size:12.5px;flex:none}
+.roomview{position:absolute;top:14px;right:14px;bottom:14px;width:min(640px,calc(100% - 28px));z-index:30;background:var(--paper);border-radius:var(--rl);box-shadow:0 12px 40px rgba(20,20,20,.22);display:flex;flex-direction:column;overflow:hidden}
+.rv-head{display:flex;justify-content:space-between;gap:12px;padding:18px 22px 14px;border-bottom:1px solid var(--line2);flex:none}
+.rv-kick{font:600 11.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
+.rv-head h2{font-size:24px;font-weight:700;line-height:1.15;margin:2px 0 4px}
+.rv-meta{font-size:13px;color:var(--ink2)}
+.rv-status{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:500;border-radius:99px;padding:3px 11px;background:var(--seg);color:var(--ink2)}
+.rv-status.k-on{background:var(--green-soft);color:var(--green)}
+.rv-close{border:1px solid var(--line);background:var(--paper);width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;color:var(--ink);flex:none}
+.rv-scroll{overflow:auto;flex:1;min-height:0;padding:0 22px 18px}
+.rv-sect{border-top:1px solid var(--line2);padding:16px 0}
+.rv-sect:first-child{border-top:0}
+.rv-sect h3{font:600 12px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin:0 0 10px}
+.rv-sect .cap{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.rv-say{font-size:14px;margin:6px 0 0;color:var(--ink)}
+.rv-steps{list-style:none;margin:0;padding:0;counter-reset:st}
+.rv-steps li{counter-increment:st;position:relative;padding:0 0 12px 34px;font-size:13.5px;color:var(--ink2)}
+.rv-steps li:before{content:counter(st);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font:700 12px/22px "Inter Tight",Inter,sans-serif;text-align:center}
+.rv-steps li:not(:last-child):after{content:"";position:absolute;left:10.5px;top:24px;bottom:2px;width:1px;background:var(--line)}
+.rv-steps b{display:block;color:var(--ink);font-size:14px}
+.rv-match{display:flex;gap:16px;align-items:center;margin-bottom:10px}
+.rv-big{flex:none;background:var(--green-soft);border-radius:14px;padding:10px 14px;text-align:center;min-width:104px}
+.rv-big b{display:block;font:800 28px/1.1 "Inter Tight",Inter,sans-serif;color:var(--green);letter-spacing:-.02em}
+.rv-big span{font-size:11.5px;color:var(--green)}
+.rv-mrows{flex:1;min-width:0}
+.rv-who{font-size:13.5px;font-weight:600;margin:0 0 4px}
+.rv-mrows .rv-row{grid-template-columns:minmax(0,1fr) 120px}
+.rv-mrows .rv-row span:first-child{font-size:13px;color:var(--ink2)}
+.rv-bars{display:flex;flex-direction:column;gap:6px}
+.rv-row{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:13px}
+.rv-row.best .rv-lbl{font-weight:700}
+.rv-row.best .rv-bar i{background:var(--amber)}
+.rv-row.out{color:var(--ink3)}
+.rv-lbl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rv-lbl small{color:var(--ink3);font-size:11.5px}
+.rv-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowrap}
+.rv-bar{position:relative;display:block;height:10px;border-radius:99px;background:var(--seg);overflow:visible}
+.rv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--green)}
+.rv-bar.soft i{background:#8FB3A5}
+.rv-bar.amber i{background:var(--amber)}
+.rv-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px}
+.rv-quote{border-left:3px solid var(--green-soft);padding:2px 0 2px 12px;margin-bottom:10px}
+.rv-quote b{font-size:12.5px;color:var(--green)}
+.rv-quote p{margin:2px 0;font-size:14px}
+.rv-quote small{font-size:11.5px;color:var(--ink3)}
+.rv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.rv-chip{font-size:12.5px;border-radius:99px;padding:3px 10px;background:var(--seg);color:var(--ink2)}
+.rv-chip.g{background:var(--green-soft);color:var(--green);font-weight:500}
+.rv-chip small{opacity:.7}
+.rv-links{display:flex;gap:14px;font-size:13.5px;margin:8px 0 0}
+.rv-links a{color:var(--green);font-weight:600;text-decoration:none}
+.rv-artists{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.rv-artists li{background:var(--bg);border-radius:10px;padding:6px 10px;min-width:0}
+.rv-artists b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-artists span{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-sis{list-style:none;margin:10px 0 0;padding:0}
+.rv-sis li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line2)}
+.rv-sn{min-width:0}
+.rv-sn .lnk{border:0;background:transparent;padding:0;font-weight:600;font-size:14px;color:var(--ink);text-align:left;text-decoration:none}
+.rv-sn .lnk:hover{text-decoration:underline}
+.rv-sn small{font-size:11.5px;color:var(--ink3)}
+.rv-st{font-size:12.5px;color:var(--ink2)}
+.rv-sis li.k-on .rv-st{color:var(--green);font-weight:500}
+.rv-sis li.k-unranked .rv-st,.rv-sis li.k-famous .rv-st{color:var(--ink3)}
+.rv-sa{display:flex;gap:10px;align-items:center;flex:none}
+.rv-score{font:600 13px "Inter Tight",Inter,sans-serif;color:var(--ink2);font-variant-numeric:tabular-nums}
+.rv-sa .btn.sm{padding:5px 11px;font-size:12.5px}
+.rv-foot{font-size:11.5px;color:var(--ink3);margin:14px 0 0}
+.rv-foot code{font-size:10.5px}
+@media (max-width:700px){
+  .roomview{position:fixed;inset:0;width:auto;border-radius:0;z-index:70;box-shadow:none}
+  .rv-head{padding:calc(14px + var(--sat)) 16px 12px} /* full screen: clear of the status bar */
+  .rv-head h2{font-size:21px}
+  .rv-scroll{padding:0 16px calc(18px + env(safe-area-inset-bottom))}
+  .rv-row{grid-template-columns:96px minmax(0,1fr) 78px;gap:8px;font-size:12.5px}
+  .rv-mrows .rv-row{grid-template-columns:1fr;gap:3px}
+  .rv-match{align-items:flex-start;gap:12px}
+  .rv-big{min-width:84px;padding:8px 10px}
+  .rv-big b{font-size:22px}
+  .rv-artists{grid-template-columns:1fr}
+  .rv-lbl small{display:none}
+}
+.rv-tally{display:flex;gap:2px;height:12px;border-radius:99px;overflow:hidden;margin:12px 0 6px}
+.rv-legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink2)}
+.rv-legend li:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0;background:var(--k)}
+.rv-tally i{background:var(--k,var(--seg))}
+.roomview .k-on{--k:var(--green)}
+.roomview .k-ranked{--k:#8FB3A5}
+.roomview .k-filtered{--k:#C9C4B8}
+.roomview .k-famous{--k:var(--amber)}
+.roomview .k-marked{--k:#868B91}
+.roomview .k-unranked{--k:#E3E0D8}
+
+/* R9 S6: Your rules */
+.rules .rlist{list-style:none;margin:0 0 10px;padding:0}
+.rules .rlist li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2)}
+.rules .rform{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 10px}
+.rules .rform label{font-size:13px;color:var(--ink2)}
+.rules .rform .inp{flex:1 1 120px;min-width:0}
+.talk .slotcap{margin:0 0 8px}
+/* R9 deep: the room's Qloo tags under Why this room */
+.qtags{display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;margin:8px 0 2px;font-size:13px}
+.qtags dt{color:var(--ink3);font-weight:500}
+.qtags dd{margin:0;color:var(--ink2);min-width:0;overflow-wrap:anywhere}
+/* source chips (lib/provenance.js) */
+.talk .srcline{margin:0 0 12px}
+.talk .talkby{margin:0 0 10px;padding:8px 10px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);font-size:13px;line-height:1.45;color:var(--ink2)}
+.talk .talkby b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px}
+.srcrows{list-style:none;margin:0 0 8px;padding:0;font-size:13px}
+.srcrows li{padding:4px 0}
+.srcrows small{display:block;color:var(--ink3);font-size:12px}
+.srcchip{font:600 10.5px/1.5 Inter,sans-serif;border-radius:99px;padding:1px 7px;margin-left:5px;vertical-align:1px;display:inline-block;white-space:nowrap;letter-spacing:0;text-decoration:none}
+.srcchip[data-k=qloo]{background:#E4ECF7;color:#244A7A}
+.srcchip[data-k=you],.srcchip[data-k=edit]{background:var(--amber-soft);color:var(--warn-ink)}
+.srcchip[data-k=model]{background:var(--seg);color:var(--ink2);font-style:italic}
+.srcchip[data-k=tpl]{background:var(--seg);color:var(--ink3);font-weight:500}
+.srclegend{margin:0 0 10px}
+.srclegend .srcchip{margin:0 2px}
+.talk .push dt .srcchip{font-style:normal}
+/* the stop's Ask Doors (Jard 2026-10-23) and its Notes (lib/door-notes.js) */
+.sask{margin-left:auto;margin-right:10px;border:0;background:var(--green);color:var(--green-ink);font:600 13px Inter,sans-serif;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.sask:hover{filter:brightness(1.08)}
+/* one Ask Doors per screen (Jard 2026-10-23): beside the map the plan toolbar's green Ask Doors is on screen (and knows the
+   open stop), so the header's would be a second; Notes keeps "Ask Doors about <door>" */
+@media (min-width:901px){.sask{display:none}}
+.dnotes .nlist{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px}
+.dnotes .nlist li{border-left:3px solid var(--amber);padding:2px 0 2px 10px}
+.dnotes .nlist li[data-by="agent"]{border-color:var(--green)}
+.dnotes .ntext{margin:0 0 2px;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere}
+.dnotes .nmeta{margin:0;font-size:12px;color:var(--ink3)}
+.dnotes .nwho{font-weight:600;color:var(--ink2)}
+.dnotes .nform textarea{width:100%;box-sizing:border-box;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;min-height:44px}
+.dnotes .nform textarea:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+.dnotes .nbtns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+@media (max-width:700px){.dnotes .nform textarea{font-size:16px}}
+
+/* ---------- the door card (Jard 10-23 #9, concept A: a maps place card; lib/doorcard.js picks the lines) ---------- */
+.shero{height:170px;margin:12px 16px 12px;border-radius:16px;overflow:hidden}
+.shero.noimg{height:0;margin:0}
+.skick{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink2)}
+.skick .spin{position:static;width:26px;height:26px;border-width:0;box-shadow:none;font-size:12.5px;flex:none}
+.sbody h2{font-size:26px;letter-spacing:-.01em;margin:6px 0 0}
+.dstatus{margin:0 0 12px;font-size:14px;color:var(--ink2)}
+.dstatus .ok{color:var(--done);font-weight:700}
+.dstatus .warn{color:#A4441A;font-weight:700}
+.dacts{display:flex;gap:8px;margin:0 0 4px}
+.dacts>*{flex:1 1 0;min-width:0}
+.dact{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:60px;padding:8px 4px;border-radius:12px;background:var(--seg);color:var(--green);font:600 13px Inter,sans-serif;text-decoration:none;border:0;cursor:pointer;text-align:center}
+.dact i{font-style:normal;height:20px;margin-bottom:2px}
+.dact small{font-size:11px;font-weight:500;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dact.pri{background:var(--green);color:#fff}
+.dact:hover{filter:brightness(.97)}
+.atdoor{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:4px 14px;margin:14px 0}
+.dch{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 2px}
+.dch h4,.dabout h4,.dsis h4{margin:0;font:700 16px "Inter Tight",Inter,sans-serif;color:var(--ink);letter-spacing:0;text-transform:none}
+.dch span{font-size:12.5px;color:var(--ink3)}
+.dl{border-top:1px solid var(--line2);padding:10px 0;margin-top:2px}
+.dch+.dl{border-top:0}
+.dl h5,.dabout h5{margin:0 0 2px;font:600 11.5px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.dl p{margin:0;font-size:14.5px;line-height:1.4}
+.dl p.big{font-size:16px;font-weight:600}
+.dl p.theask{background:var(--amber-soft);color:var(--warn-ink);font-weight:700;border-radius:10px;padding:8px 10px}
+.dsub{font-size:12.5px;color:var(--ink3);margin:2px 0 0}
+.dmore{display:flex;justify-content:space-between;width:100%;border:0;border-top:1px solid var(--line2);background:none;padding:12px 0;color:var(--green);font:600 14px Inter,sans-serif;cursor:pointer;text-align:left}
+.dabout{margin:18px 0 6px}
+.dabout div{margin-top:10px}
+.dabout p{margin:0;font-size:14px}
+.drows{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:16px 0}
+.drow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border:0;border-top:1px solid var(--line2);background:none;text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.drow:first-child{border-top:0}
+.drow:hover{background:var(--bg)}
+.drow i{width:30px;height:30px;border-radius:8px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-style:normal;font-weight:700;font-size:13px;flex:none}
+.drow span{flex:1;min-width:0}
+.drow b{display:block;font-weight:600;font-size:14.5px}
+.drow small{display:block;color:var(--ink3);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drow em{font-style:normal;color:var(--ink3);font-size:20px}
+.dsis{margin:4px 0}
+.dsis .cap{font-size:12.5px;color:var(--ink3);margin:2px 0 8px}
+.dsis ul.sis{margin:0 0 10px}
+.dsis ul.sis li{padding:10px 0;border-top:1px solid var(--line2,var(--line))}
+.dsis ul.sis li:first-child{border-top:0}
+.dsis ul.sis b{font-size:14.5px}
+.dsis ul.sis small{font-size:12.5px;margin-top:2px}
+.dafter{background:#EEF6F1;border:1px solid #CFE5D7;border-radius:16px;padding:12px 14px;margin:14px 0}
+.dafter b{color:var(--done);font:700 16px "Inter Tight",Inter,sans-serif}
+.dafter p{margin:4px 0 0;font-size:14px}
+.dafter.out{background:var(--seg);border-color:var(--line);font-size:14px}
+.dtally{margin-top:12px}
+.dtally-h{margin:0;font-weight:700;font-size:14px;color:var(--ink)}
+.dtally-bar{display:flex;gap:3px;margin:6px 0 4px}
+.dtally-bar i{flex:1;height:8px;border-radius:4px;background:#D5E3DA}
+.dtally-bar i.v{background:var(--done)}
+.dpage .pgh{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:6px 0 10px}
+.dpage .pgh .sback{padding-left:0;color:var(--green);font-weight:600}
+.dpage .pgh h3{margin:0;font:700 20px "Inter Tight",Inter,sans-serif;outline:0}
+.dpage .sect:first-of-type{border-top:0}
+.sfoot{position:relative}
+.smorebtn{width:50px;padding:12px 0;flex:none;font-weight:800;display:grid;place-items:center;color:var(--ink2)}
+.smore{position:absolute;right:16px;bottom:calc(100% - 4px);background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);display:flex;flex-direction:column;min-width:200px;overflow:hidden;z-index:5}
+.smore[hidden]{display:none}
+.smore button,.smore a{border:0;background:none;text-align:left;padding:12px 14px;font:500 14px Inter,sans-serif;color:var(--ink);cursor:pointer;text-decoration:none;border-top:1px solid var(--line2)}
+.smore>:first-child{border-top:0}
+.smore button:hover,.smore a:hover{background:var(--bg)}
+.smore>:focus-visible{outline:none;background:var(--bg);box-shadow:inset 3px 0 0 var(--green)}
+/* phone sheet: the half sheet opens on the name and the 30-second read (the map is the picture); pulled up, the photo */
+@media (max-width:700px){
+  .shero{display:none}
+  .stopview.full .shero:not(.noimg){display:block;height:130px;margin:4px 16px 10px}
+  .stopview.full .shero img{display:block}
+}
+.dabout .dqloo{display:inline-block;margin-top:10px;font-size:14px}
+/* intuit audit 1b #5: the sheet's top at a phone width. "← All stops" and "‹ Stop 1 of 9 ›" share one row; under it the
+   door's name (once its big title has scrolled off) beside "Ask about this door", kept off the screen's edge; no third
+   row. A short screen (≤ 700 px tall) opens the sheet full height (ui/stop.js) and leaves the photo out, so the door
+   itself has the room */
+@media (max-width:700px){
+  .shead{padding:18px 16px 6px 8px;row-gap:4px}
+  .shead::after{content:"";flex-basis:100%;order:3}
+  .sback{order:1}
+  .snav{order:2;margin-left:auto}
+  .sname{order:4;flex:1 1 0;min-width:0;padding:0 8px 0 8px}
+  .sask{order:5;margin:0 0 0 auto}
+}
+@media (max-width:700px) and (max-height:700px){.stopview.full .shero:not(.noimg){display:none}}
+/* tour fit (320): in the guided demo the banner sits over the page's top, so a door's sheet stops below it, and while a
+   door is open the banner keeps only its buttons (ui/demo.js sets --dbanner-h) */
+@media (max-width:700px){
+  html.in-demo.sheet-open .demo-banner .dtext{display:none}
+  html.in-demo .stopview{max-height:calc(100dvh - var(--dbanner-h,0px))}
+}

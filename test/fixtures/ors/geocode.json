@@ -1,0 +1,10 @@
+{
+  "geocoding": { "version": "0.2", "attribution": "https://openrouteservice.org/terms-of-service/#attribution-geocode", "query": { "text": "E Cesar Chavez St, Austin", "size": 5 } },
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-97.7297, 30.2577] }, "properties": { "layer": "street", "name": "East Cesar Chavez Street", "label": "East Cesar Chavez Street, Austin, TX, USA", "confidence": 0.8 } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-97.7215, 30.2556] }, "properties": { "layer": "address", "name": "1500 East Cesar Chavez Street", "label": "1500 East Cesar Chavez Street, Austin, TX, USA", "confidence": 0.7 } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-97.7149, 30.2541] }, "properties": { "layer": "address", "name": "2100 East Cesar Chavez Street", "label": "2100 East Cesar Chavez Street, Austin, TX, USA", "confidence": 0.7 } }
+  ],
+  "bbox": [-97.7297, 30.2541, -97.7149, 30.2577]
+}

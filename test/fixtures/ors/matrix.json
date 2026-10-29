@@ -1,0 +1,15 @@
+{
+  "durations": [[0, 182.6, 455.1], [190.3, 0, 301.2], [462.8, null, 0]],
+  "distances": [[0, 1215.4, 3540.2], [1302.7, 0, 2398.9], [3611.0, null, 0]],
+  "destinations": [
+    { "location": [-97.760568, 30.224437], "snapped_distance": 4.2 },
+    { "location": [-97.761391, 30.217154], "snapped_distance": 6.1 },
+    { "location": [-97.742367, 30.215381], "snapped_distance": 3.3 }
+  ],
+  "sources": [
+    { "location": [-97.760568, 30.224437], "snapped_distance": 4.2 },
+    { "location": [-97.761391, 30.217154], "snapped_distance": 6.1 },
+    { "location": [-97.742367, 30.215381], "snapped_distance": 3.3 }
+  ],
+  "metadata": { "attribution": "openrouteservice.org | OpenStreetMap contributors", "service": "matrix", "query": { "profile": "driving-car", "metrics": ["duration", "distance"] } }
+}

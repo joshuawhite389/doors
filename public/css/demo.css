@@ -1,0 +1,162 @@
+/* C2: the scripted demo (ui/demo.js) and the baked-road attribution (demo + landing hero). Mockup frames 2 and 6. */
+.demo{display:flex;flex-direction:column;flex:1;min-height:0}
+.dstage{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;position:relative}
+.demo-banner{flex:none;background:var(--ink);color:#fff;padding:9px 24px;font-size:14px;display:flex;gap:14px;align-items:center;position:relative;z-index:81} /* above the cards' dim: Skip stays lit */
+.demo-banner .dtext{min-width:0}
+.demo-banner .dfic{color:#B9BCC0}
+.demo-banner .ctl{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+.demo-banner .dstep{font-size:12.5px;color:#B9BCC0;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis}
+.demo-banner button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:99px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.demo-banner button:hover{background:rgba(255,255,255,.24)}
+.demo-banner button[hidden]{display:none}
+.demo-banner [data-d="skip"]{background:#fff;color:var(--ink);font-weight:600}
+.demo-banner [data-d="skip"]:hover{background:#E9EBE7}
+
+/* the demo fills the form itself: no "Fill with a sample brand" offer */
+.demo .sampleask{display:none}
+.demo .exfic{display:none} /* judge pass 2 (27): the banner already says Maya and Tidewell are made up */
+
+/* the field being filled, and anything the script points at */
+.demo .demo-hl{outline:3px solid var(--green);outline-offset:2px;border-radius:10px;box-shadow:0 0 0 7px var(--green-soft);transition:outline-color .2s,box-shadow .2s}
+.demo .inp.demo-hl{border-color:var(--green)}
+.demo .dhost{position:relative}
+.dwhy{position:absolute;right:0;top:-12px;transform:translateY(-100%) translateY(6px);background:var(--ink);color:#fff;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);opacity:0;transition:opacity .25s,transform .25s;z-index:20;pointer-events:none}
+.dwhy.on{opacity:1;transform:translateY(-100%)}
+.dwhy:after{content:"";position:absolute;right:22px;bottom:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--ink)}
+.stop .dwhy,.stops .dwhy{top:-4px;right:12px}
+.demo .persona{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.demo .persona .avatar{width:48px;height:48px;font-size:17px}
+
+/* baked road geometry: say where it came from */
+.rattr{position:absolute;left:12px;bottom:10px;z-index:5;font-size:11px;color:var(--ink2);background:rgba(255,255,255,.85);border-radius:6px;padding:2px 7px;pointer-events:none}
+.hero-card .rattr{left:16px;bottom:16px}
+
+
+/* the tile warm-up map: rendered off screen while the form types */
+.dwarm{position:fixed;left:-12000px;top:0;width:980px;height:720px;visibility:hidden;pointer-events:none}
+
+@media (max-width:900px){
+  .demo-banner{padding:8px 14px;font-size:13px;flex-wrap:wrap;gap:6px 10px;position:sticky;top:var(--sat)}
+  .demo-banner .dline{display:none}
+  .demo-banner .dstep{display:none}
+  .demo-banner .ctl{margin-left:0;flex:1 1 auto;flex-wrap:wrap;min-width:0;gap:6px}
+  .demo-banner button{padding:5px 9px;font-size:12px}
+  .dstage{overflow:visible}
+  /* the map block stacks on a phone (map, then the plan tools): the credit is its own line under the tools, so the
+     third row of tools ("Edit profile") never sits under it */
+  .mapwrap .rattr{position:static;order:99;align-self:flex-start;margin:0 12px 8px;font-size:10px;background:none;padding:0}
+}
+@media (prefers-reduced-motion:reduce){.dwhy,.ccard,.chole{transition:none;animation:none}}
+/* judge pass 2 (29): the side panel's text stays in view as the form scrolls (doors.css .pside-in) */
+
+/* the guided demo's cards (ui/coach.js): a spotlight that lets every click through, and a card beside its target */
+.cdim{position:fixed;inset:0;z-index:80;pointer-events:none}
+.cdim[hidden]{display:none}
+.cdim.nohole{background:rgba(23,25,27,.28)}
+.chole{position:fixed;border-radius:14px;box-shadow:0 0 0 200vmax rgba(23,25,27,.28),0 0 0 3px var(--green);transition:left .25s,top .25s,width .25s,height .25s,opacity .2s}
+.ccard{position:fixed;z-index:82;width:min(370px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border-radius:18px;padding:18px 20px 16px;
+  box-shadow:0 24px 60px rgba(20,20,20,.28),0 2px 6px rgba(20,20,20,.08);font-size:14.5px;line-height:1.5}
+.ccard[hidden]{display:none}
+.ccard.in{animation:ccard .28s ease}
+@keyframes ccard{from{opacity:0;transform:translateY(8px)}}
+.ccard .ccount{font-size:12.5px;font-weight:600;color:var(--ink3);margin-bottom:4px}
+.ccard h3{font-family:"Inter Tight",Inter,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px}
+.ccard p{margin:0 0 8px;color:var(--ink2)}
+.ccard .ccta{margin:10px 0 2px;background:var(--green-soft);color:var(--green);font-weight:600;border-radius:10px;padding:8px 12px}
+.ccard .cbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px}
+.ccard .cbtns:empty{display:none}
+.ccard .cbtns .lnk{margin-right:auto;font-size:13.5px}
+.ccard.docked{left:10px !important;right:10px;top:auto !important;bottom:10px;width:auto;max-height:46vh;overflow:auto;padding:14px 16px 12px}
+.ccard.docked.top{top:var(--ctop,10px) !important;bottom:auto}
+.ccard.docked h3{font-size:18px}
+/* R9 swap card: the same brand, two cities, side by side (a column each on a phone) */
+.ccard.wide{width:min(620px,calc(100vw - 32px))}
+.ccard.wide.xl{width:min(820px,calc(100vw - 32px))}
+.ccard.fit{overflow:auto}
+.ccard.fit .cbtns{position:sticky;bottom:-16px;background:var(--paper);margin:8px -20px -16px;padding:10px 20px 14px;border-top:1px solid var(--line,#e3e3e3)}
+.dswap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 6px}
+.dswap>div{border:1px solid var(--line,#e3e3e3);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.dswap h4{margin:0 0 2px;font-size:15px}
+.dswap q{display:block;color:var(--ink2);margin:0 0 2px}
+.dswap .src{color:var(--ink3);font-size:11.5px;margin:0 0 8px}
+.dswap>.src{grid-column:1/-1;margin:-6px 0 4px} /* intuit pass 1b #9: once, under both cities */
+.dswap .rk1{font-size:14px;color:var(--ink);margin:2px 0 2px}
+.dswap .rk1 b{font-size:17px}
+.dswap .rk2{color:var(--ink2);margin:0 0 2px}
+.dswap q{margin-top:8px}
+@media (max-width:700px){.dswap{grid-template-columns:1fr}.dswap>div{padding:8px 10px}}
+.ccard.wide.docked{max-height:80vh}
+/* tour fit (320/375): every docked phone card pins its buttons to its bottom, not only a squeezed one: a card longer than
+   46vh (card 1 at 320×568) scrolled Continue out of sight inside it, and nothing showed the card scrolls */
+.ccard.docked .cbtns,.ccard.docked.fit .cbtns{position:sticky;bottom:-12px;background:var(--paper);margin:8px -16px -12px;padding:10px 16px 12px;border-top:1px solid var(--line,#e3e3e3)} /* a card shrunk to the room beside its target */
+.ccard.wide.docked .cbtns{position:sticky;bottom:-12px;background:var(--paper);margin:8px -16px -12px;padding:10px 16px 12px;border-top:1px solid var(--line,#e3e3e3)}
+@media (max-width:700px){.dswap q,.dswap .src{display:none}} /* judge pass 9 #3: both cities' numbers on one phone screen */
+/* R9: the coach card stays above drive mode's full-screen overlay (drive.css z-index 1000) */
+html.driving .ccard{z-index:1010}
+html.driving .cdim{z-index:1005}
+/* the sticky banner (phone) would cover the map's top when Why's "Show on map" or a day tab scrolls to it */
+@media (max-width:900px){.demo #plan-map{scroll-margin-top:96px}}
+/* "Thursday, she's back": the same door before and after the visit */
+.dback{margin:4px 0 6px;font-size:13px}
+.dback .dbh,.dback .dbr{display:grid;grid-template-columns:118px 1fr 1fr;gap:10px;align-items:start}
+.dback .dbh{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:0 8px 4px}
+.dback .dbr{padding:7px 8px;border-top:1px solid var(--line2)}
+.dback .dbr b{font-size:12.5px;color:var(--ink2)}
+.dback .dbr p{margin:0;color:var(--ink2)}
+.dback .dbr .was{color:var(--ink3)}
+.dback .dbr.ch{background:var(--amber-soft);border-radius:10px;border-top-color:transparent}
+.dback .dbr.ch+.dbr{border-top-color:transparent}
+.dback .dbr.ch .now{color:var(--ink);font-weight:500}
+.dback .dbr.ch .was .t{text-decoration:line-through;text-decoration-color:rgba(0,0,0,.25)}
+.dback .srcchip{display:table;margin:4px 0 0} /* intuit pass 1b: a tag on its own line, not the end of the sentence */
+.dback .dbn{margin:8px 8px 0;color:var(--ink3);font-size:12px}
+/* compact: the struck-out line keeps two lines (all of it on hover), and what didn't change sits plain under the rest */
+@media (min-width:701px){.dback .dbr.ch .was .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+.dback .dbr.same{border-top:1px dashed var(--line2)}
+.dback .dbr.same p{color:var(--ink2)}
+.dback .dbsame{margin-left:4px;font-size:11px;color:var(--ink3);white-space:nowrap}
+@media (max-width:700px){
+  .dback .dbh{display:none}
+  .dback .dbr{grid-template-columns:1fr;gap:2px}
+  .dback .dbr .sr{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;font-weight:600;margin-right:4px}
+  .dback .dbr.same .was,.dback .dbr.same .sr{display:none}
+}
+/* judge pass 3 (4): on a desktop the demo banner sits under the app bar, so the Ask Doors panel leaves room for it too
+   (at 1372×686 its title and × were under the banner) */
+@media (min-width:701px){html.in-demo .agentpanel{height:min(620px,calc(100vh - var(--appbar) - 56px - 32px))}}
+/* on a phone the Ask Doors sheet is shorter in the demo, so the card docked above it leaves the answer in view */
+/* round 7: the sheet is sized by the visual viewport in css/agent.css (55% of it in the demo); the toast follows --sheet-h */
+/* intuit audit 1b #10: the tour banner's buttons (28 px tall) and a card's "Close" link (36×20) get 44 px hit areas at a
+   phone width; the area reaches into the banner's padding, and wrapped rows sit 44 px apart so no two areas overlap */
+@media (max-width:700px){
+  .demo-banner .ctl{row-gap:16px}
+  .demo-banner button,.ccard .cbtns .lnk{position:relative}
+  .demo-banner button::after,.ccard .cbtns .lnk::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+}
+/* judge 10 #2: a phone card cut mid-line gave no cue that it scrolls: while more text sits under the pinned buttons, it
+   fades out above them (ui/coach.js sets .cmore; not .more, the plan rows' ⋯ class) */
+.ccard.docked.cmore .cbtns::before{content:"";position:absolute;left:0;right:0;top:-28px;height:28px;background:linear-gradient(rgba(255,255,255,0),var(--paper));pointer-events:none}
+/* intuit pass 2 #1: under 420 px the banner is one row ("▶ Guided demo." and three short buttons; the made-up line is on
+   card 1), so a docked card keeps the ~80 px the banner's 2-3 rows took (cards 9, 13, 17, 21 read one line at 375/320).
+   The short label is drawn from data-short; the button's text and aria-label keep the full name */
+.ccard .cfic{display:none}
+@media (max-width:420px){
+  .demo-banner{flex-wrap:nowrap;gap:8px;padding:6px 10px}
+  .demo-banner .dtext{white-space:nowrap}
+  .demo-banner .dfic{display:none}
+  .demo-banner .ctl{flex:none;flex-wrap:nowrap;margin-left:auto;gap:6px}
+  .demo-banner button[data-short]{font-size:0;padding:6px 10px;min-width:44px} /* 44 px wide: the tap areas of ↻ and Skip never overlap */
+  .demo-banner button[data-short]::before{content:attr(data-short);font-size:12.5px}
+  .demo-banner button[data-short] .ic.nar{display:inline-block}
+  .demo-banner button[data-short] .ic.l{margin-right:0}
+  .ccard .cfic{display:block;color:var(--ink3);font-size:13px}
+}
+
+/* r2 (Jard 10-24): the tour's end card lists places to explore; hovering one spotlights its part of the page */
+.ccard .cexp{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.ccard .cex{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.ccard .cex b{font-size:14px;font-weight:600;color:var(--green)}
+.ccard .cex span{font-size:13px;color:var(--ink2);line-height:1.4}
+.ccard .cex:hover,.ccard .cex:focus-visible{border-color:var(--green);background:var(--green-soft)}
+@media (max-width:700px){.ccard .cex span{display:none}.ccard .cex{padding:8px 12px}} /* a phone has no hover: the four rows fit without their lines */

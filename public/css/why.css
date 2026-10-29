@@ -1,0 +1,187 @@
+/* "What your plan is based on" (ui/why.js on lib/basis.js; the phone's screens/Why.tsx). Desktop: the left column
+   beside the map (why-mode). Phone and narrow (≤ 900 px): a full-screen sheet; "Show on map" folds it to a bar. */
+.drawer.whyp{width:min(640px,calc(100% - 48px));top:72px;bottom:20px;max-height:none;padding:0 0 18px;overflow:auto;overscroll-behavior:contain;font-size:14px;scrollbar-gutter:stable}
+.drawer.whyp>*{margin-left:22px;margin-right:22px}
+.whyp .w-load{padding:24px 0;color:var(--ink3)}
+.drawer.whyp .w-head{position:sticky;top:0;z-index:3;margin:0;padding:14px 22px 10px;background:var(--paper);display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line2)}
+.whyp .w-head h3{font-size:20px;margin:4px 0 0;font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.01em}
+.drawer.whyp .w-sub{margin-top:10px;margin-bottom:0;color:var(--ink2);font-size:13.5px}
+.whyp .w-x{border:0;background:var(--chip);width:34px;height:34px;border-radius:50%;padding:0;display:inline-grid;place-items:center;line-height:1;color:var(--ink);flex:none;cursor:pointer} /* round 7: the icon set's ×, centred */
+.whyp .w-drinkers{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.whyp .w-drinkers button{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer}
+.whyp .w-drinkers button[aria-selected=true]{background:var(--green);border-color:var(--green);color:#fff}
+.whyp .w-setlink{margin-top:14px;margin-bottom:0} /* round 5 #1: margin:14px 0 0 dropped the drawer's 22px side margin and clipped the link at the left edge */
+.whyp .w-setlink .lnk{font-size:14px;font-weight:600;cursor:pointer}
+.whyp .w-src{font-size:12px;color:var(--ink3);margin-top:8px;margin-bottom:0;line-height:1.45}
+.whyp .w-tray{position:sticky;bottom:0;z-index:2;margin-top:14px;background:var(--paper);border:1.5px solid #E07B2A;border-radius:14px;box-shadow:var(--shadow);padding:10px 12px}
+.whyp .w-trayhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:13px}
+.whyp .w-trayhead .lnk{border:0;background:none;padding:0 0 0 12px;font:inherit;font-size:13px;font-weight:600;color:var(--green);cursor:pointer}
+.whyp .w-peekbar{display:none}
+@media (max-width:900px){
+  .drawer.whyp{position:fixed;inset:0;width:auto;margin:0;border-radius:0;z-index:95;max-height:none;padding-bottom:28px} /* over the demo banner too */
+  .drawer.whyp>*{margin-left:16px;margin-right:16px}
+  .drawer.whyp .w-head{padding:calc(12px + var(--sat)) 16px 10px} /* full screen: clear of the status bar */
+  .drawer.whyp.w-peek{top:auto;bottom:0;height:auto;overflow:visible;padding:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.14)}
+  .whyp.w-peek>:not(.w-peekbar){display:none !important}
+  .whyp.w-peek .w-peekbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));font-size:13px}
+}
+/* owner review 3: on a desktop this is the left column, the plan list folded away ("← Your plan" brings it back), so
+   the whole map stays in view beside it */
+@media (min-width:901px){
+  .route.why-mode{grid-template-columns:min(660px,50vw) 1fr}
+  .route.why-mode .rcol>:not(#why){display:none !important}
+  .route.why-mode .rcol>#why.drawer.whyp{position:static;inset:auto;width:auto;height:auto;flex:1;min-height:0;max-height:none;border-radius:0;box-shadow:none;z-index:auto}
+}
+.whyp .w-back{border:0;background:none;padding:0;font:inherit;font-size:13px;color:var(--green);font-weight:600;cursor:pointer;white-space:nowrap}
+.whyp .w-head:has(.w-back) h3{margin-right:auto;margin-left:6px}
+.whyp .w-back:hover{text-decoration:underline;text-underline-offset:2px}
+@media (max-width:900px){.whyp .w-back{display:none}}
+/* why-mode's map: every place is this view's layer (a click opens that door here); the plan's pins stay as pictures
+   and the ranked-door pins step aside */
+.route.why-mode .mapwrap .maplibregl-marker,.route.why-mode .mapwrap .maplibregl-marker *{pointer-events:none}
+.route.why-mode .mrank{display:none}
+
+/* What your plan is based on (Jard 10-23 #2/#7, ui/why.js on lib/basis.js): plain facts in groups, each door its own
+   view. */
+.whyp .w-steps{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.whyp .w-steps li{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:2px}
+.whyp .w-steps b{font-family:"Inter Tight",Inter,sans-serif;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.whyp .w-steps span{font-size:12.5px;color:var(--ink2);line-height:1.3}
+.whyp .w-steps li.last{background:var(--green);border-color:var(--green)}
+.whyp .w-steps li.last b,.whyp .w-steps li.last span{color:#fff}
+.whyp .w-grp{margin-top:20px}
+.whyp .w-grp h4{font-family:"Inter Tight",Inter,sans-serif;font-size:16px;margin:0 0 8px}
+.whyp .w-facts{list-style:none;margin:0;padding:0 14px;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.whyp .w-fact{padding:12px 0;border-bottom:1px solid var(--line2)}
+.whyp .w-fact:last-child{border-bottom:0}
+.whyp .w-fact.on{box-shadow:inset 3px 0 0 #E07B2A;margin:0 -14px;padding-left:14px;padding-right:14px}
+.whyp .w-fl{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.whyp .w-ft{margin:0;font-weight:600;font-size:14.5px;line-height:1.4;color:var(--ink)}
+.whyp button.w-ft{border:0;background:none;padding:0;font:inherit;font-weight:600;text-align:left;cursor:pointer;display:flex;gap:10px;justify-content:space-between;width:100%}
+.whyp button.w-ft span{color:var(--ink3);font-size:18px;line-height:1}
+.whyp button.w-ft:hover{color:var(--green)}
+.whyp .w-fm{margin:3px 0 0;color:var(--ink2);font-size:13px;line-height:1.45}
+.whyp .w-fx{display:flex;flex-wrap:wrap;column-gap:16px;row-gap:4px;margin-top:6px}
+.whyp .w-fx .lnk,.whyp .wc-links .lnk,.whyp .wc-links a{border:0;background:none;padding:4px 0;font:inherit;font-size:13.5px;font-weight:600;color:var(--green);cursor:pointer;text-decoration:none}
+.whyp .w-fx .lnk:hover,.whyp .wc-links .lnk:hover,.whyp .wc-links a:hover{text-decoration:underline;text-underline-offset:2px}
+.whyp .w-fx .w-find[aria-pressed=true]{color:#B4531A}
+.whyp .w-morerow{padding:10px 0;border-bottom:0}
+.whyp .w-morerow .lnk{border:0;background:none;padding:0;font:inherit;font-size:13.5px;font-weight:600;color:var(--green);cursor:pointer}
+.whyp .w-switch{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);flex:none;cursor:pointer}
+.whyp .w-switch input{width:18px;height:18px;accent-color:var(--green)}
+.whyp .w-search{margin-top:10px}
+.whyp .w-findbox{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;background:var(--paper)}
+.whyp .w-hits{list-style:none;margin:6px 0 0;padding:0}
+.whyp .w-hits button{border:0;border-bottom:1px solid var(--line2);background:none;width:100%;text-align:left;padding:9px 2px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.whyp .w-hits button span{color:var(--ink3);font-size:12.5px;margin-left:6px}
+.whyp .w-door{margin-top:14px}
+.whyp .w-dname{font-family:"Inter Tight",Inter,sans-serif;font-size:20px;margin:0}
+.whyp .w-dname:focus{outline:none}
+.whyp .w-trail{list-style:none;margin:12px 0 0;padding:0 14px;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.whyp .w-trail li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line2);font-size:14px;line-height:1.4}
+.whyp .w-trail li:last-child{border-bottom:0}
+.whyp .w-trail i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:11px;font-weight:800;background:var(--green);margin-top:1px}
+.whyp .w-trail li.no i{background:#E07B2A}
+.whyp .w-door h5{font-size:13px;margin:18px 0 6px;color:var(--ink)}
+.whyp .w-say{margin:0;background:var(--green-soft);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.whyp .w-say-to{margin:10px 0 4px;font-size:13px;color:var(--ink2)}
+.whyp .w-dfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+.whyp .w-door .wc-links{display:flex;flex-wrap:wrap;column-gap:18px;margin-top:14px}
+.whyp .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:520px){.whyp .w-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.whyp .w-back.w-backdoor{display:inline}}
+/* why2 concept A (Jard's pick 10-24): who it's for, "What do you want to do?", four tiles, a view per tile */
+.whyp .w-who{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:14px}
+.whyp .w-who .btn{margin-left:auto}
+.whyp .w-who b{display:block;font-size:15px}.whyp .w-who span{display:block;font-size:13px;color:var(--ink3)}
+.whyp .w-who .w-edit{margin-left:auto;font-weight:600;font-size:14px;color:var(--green);text-decoration:none}
+.whyp .w-ico,.whyp .w-who .w-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--green-soft);color:var(--green)} /* round 6 #3 (Jard 10-27: "the picture inside the box is way off"): .w-who span{display:block} below used to beat the flex centring, so the icon sat in the tile's top-left corner */
+.whyp .w-ask{margin-top:16px;margin-bottom:8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.whyp .w-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.whyp .w-tile{all:unset;box-sizing:border-box;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.whyp .w-tile:hover{border-color:var(--green)}.whyp .w-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.whyp .w-tile b{font-family:"Inter Tight",Inter,sans-serif;font-size:17px;line-height:1.15;letter-spacing:-.01em}
+.whyp .w-tile .w-tl{font-size:13px;color:var(--ink2);line-height:1.35}
+.whyp .w-tile .w-go{margin-top:auto;padding-top:4px;color:var(--green);font-weight:700;font-size:14px}
+.whyp .t-missing .w-ico{background:var(--amber-soft);color:var(--amber)}
+.whyp .t-who .w-ico,.whyp .w-who .t-who{background:#FBE7DA;color:#C2571A}
+.whyp .t-map .w-ico{background:#DDEDF4;color:#2E6F8E}
+.whyp .w-changes{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:space-between;width:100%;margin-top:12px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:14px;font-weight:600;font-size:14px}
+.whyp .w-rows{list-style:none;margin:8px 0 0;padding:0;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.whyp .w-rows li{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line2);padding-right:10px}
+.whyp .w-rows li:first-child{border-top:0}
+.whyp .w-rows li>button[data-door]{all:unset;box-sizing:border-box;cursor:pointer;flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 12px}
+.whyp .w-rows b{display:block;font-size:14.5px}.whyp .w-rows small{display:block;font-size:12.5px;color:var(--ink3)}
+.whyp .w-rows em{margin-left:auto;font-style:normal;color:var(--ink3);font-size:18px}
+.whyp .w-n{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.whyp .w-add{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--green);background:var(--paper);color:var(--green);font-size:20px;font-weight:600;cursor:pointer;line-height:1}
+.whyp .w-gh{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.whyp .w-more{margin-top:8px;font-size:14px;font-weight:600}
+.whyp .w-cr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.whyp .w-crowd{border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.whyp .w-crowd.c0{background:#FBE7DA}.whyp .w-crowd.c1{background:#DDEDF4}.whyp .w-crowd.c2{background:var(--green-soft)}
+.whyp .w-crowd.r-bars{background:#FBE7DA}.whyp .w-crowd.r-restaurants{background:#DDEDF4}.whyp .w-crowd.r-breweries{background:#F3ECD8}
+.whyp .w-crowd b{font-size:14.5px}.whyp .w-crowd span{font-size:13px;color:var(--ink2)}
+@media (max-width:380px){.whyp .w-tile{min-height:132px;padding:12px}.whyp .w-tile b{font-size:16px}}
+/* group 3 item 1: the place from Qloo's facts on top, one line on why, the gate list and Qloo's steps behind a fold */
+.whyp .w-place{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px 14px 12px}
+.whyp .w-door .w-place h5{margin:10px 0 4px}
+.whyp .w-pic{margin:0}
+.whyp .w-pic>div{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px solid var(--line2);font-size:14px;line-height:1.45}
+.whyp .w-pic>div:last-child{border-bottom:0}
+.whyp .w-pic dt{color:var(--ink3);font-size:13px;font-weight:600}
+.whyp .w-pic dd{margin:0;color:var(--ink)}
+.whyp .w-psrc{margin:8px 0 0;color:var(--ink3);font-size:12px}
+.whyp .w-getq{margin-top:6px}
+.whyp .w-fetch{margin:8px 0 0;font-size:13.5px}
+.whyp .w-fetch.err{color:#B4561D}
+.whyp .w-why{margin:0;font-size:14.5px;line-height:1.45}
+.whyp .w-how{margin-top:16px;border-top:1px solid var(--line2);padding-top:10px}
+.whyp .w-how summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--ink);padding:4px 0}
+.whyp .w-hsteps{margin:12px 0 0;padding-left:20px;font-size:13.5px;line-height:1.45;color:var(--ink2)}
+.whyp .w-hsteps li{margin-bottom:8px}
+.whyp .w-hsteps b{display:block;color:var(--ink);font-size:13.5px}
+@media (max-width:520px){.whyp .w-pic>div{grid-template-columns:1fr;gap:2px}}
+
+/* the Add-a-door preview card and the four jobs (ui/whymap.js pvHTML, ui/why.js homeHTML) */
+.whyp .ws-pv{background:var(--green-soft);border-radius:12px;padding:12px 14px;display:grid;gap:6px;font-size:13px;margin-top:12px}
+.whyp .ws-pv p{margin:0}
+.whyp .ws-pv.busy{color:var(--ink2)}
+.whyp .ws-pvh{font-weight:700}
+.whyp .ws-pvl,.whyp .ws-pvd{margin:0;padding:0;list-style:none;display:grid;gap:3px}
+.whyp .ws-pvl b{display:inline-block;width:14px}
+.whyp .ws-pvl .in b{color:#13875A}.whyp .ws-pvl .out b{color:#D2463C}
+.whyp .ws-pvd{color:var(--ink2)}
+.whyp .ws-pvm{color:var(--ink3);font-size:12px}
+.whyp .ws-pva{display:flex;gap:8px;flex-wrap:wrap}
+.whyp .ws-jobs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+.whyp .ws-job{display:grid;gap:2px;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:10px 12px;cursor:pointer}
+.whyp .ws-job:hover{border-color:var(--green)}
+.whyp .ws-job b{font:600 13.5px/1.25 "Inter Tight",Inter,sans-serif}
+.whyp .ws-job span{font-size:12px;color:var(--ink2)}
+/* r2viz: one door (ui/whymap.js doorExtrasHTML) */
+.whyp .wd-fate{font-weight:600}
+.whyp .wd-add{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 2px}
+.whyp .wd-add span{font-size:12.5px;color:var(--ink3)}
+.whyp .wd-sec{margin:14px 0 0}
+.whyp .wd-sec h5{margin:0 0 6px}
+.whyp .wd-when{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.whyp .wd-when span{border-radius:7px;padding:6px 2px;text-align:center;font-size:11.5px;font-weight:600;background:var(--line2);color:var(--ink3)}
+.whyp .wd-when span.on{background:var(--green);color:#fff}
+.whyp .wd-note{font-size:12px;color:var(--ink3);margin:6px 0 0}
+.whyp .wd-chips{display:flex;flex-wrap:wrap;gap:6px}
+.whyp .wd-chips span{background:var(--chip);border-radius:99px;padding:3px 10px;font-size:12.5px}
+.whyp .wd-chips small{color:var(--ink3);margin-left:5px}
+.whyp .wd-sis{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.whyp .wd-sis li{display:flex;align-items:center;gap:6px}
+.whyp .wd-sis li>button:first-child{flex:1;display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;border:0;background:none;text-align:left;padding:5px 6px;border-radius:8px;cursor:pointer;font-size:13px}
+.whyp .wd-sis li>button:first-child:hover{background:var(--chip)}
+.whyp .wd-sis i{width:11px;height:11px;border-radius:50%}
+.whyp .wd-sis em{font-style:normal;color:var(--ink3);font-size:12px}
+.whyp .wd-ages{display:grid;gap:5px}
+.whyp .wd-ages div{display:grid;grid-template-columns:70px 1fr 88px;gap:8px;align-items:center;font-size:12.5px}
+.whyp .wd-bar{height:8px;border-radius:4px;background:var(--line2);overflow:hidden;display:block}
+.whyp .wd-bar i{display:block;height:100%;background:var(--green);border-radius:4px}
+.whyp .wd-ages em{font-style:normal;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.whyp .wd-more{margin-top:14px}
+.whyp .wd-more summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--ink2)}

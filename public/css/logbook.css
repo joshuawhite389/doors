@@ -1,0 +1,73 @@
+/* The Log book pane (ui/logbook.js). Wide screen: the plan's left column, the list folded away (log-mode), so the map
+   stays in view beside it, as Why these doors does. Phone and narrow (≤ 900 px): a full-screen sheet. */
+.drawer.lbp{width:min(640px,calc(100% - 48px));top:72px;bottom:20px;max-height:none;padding:0 0 18px;overflow:auto;overscroll-behavior:contain;font-size:14px;scrollbar-gutter:stable}
+.drawer.lbp>*{margin-left:22px;margin-right:22px}
+.lbp .lb-head{position:sticky;top:0;z-index:3;margin:0;padding:14px 22px 10px;background:var(--paper);display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line2)}
+.lbp .lb-head h3{font-size:18px;margin:0}
+.lbp .lb-x{border:0;background:var(--line2);width:34px;height:34px;border-radius:50%;padding:0;display:inline-grid;place-items:center;line-height:1;cursor:pointer;color:var(--ink2);flex:none} /* round 7 (Jard 10-27): a true circle, the × centred in it */
+.lbp .lb-x:hover{background:var(--line)}
+.lbp .lb-saved{font-size:12px;color:var(--ink3);align-self:center;flex-basis:100%} /* round 7: the intro paragraph is gone; this line stays, small, by the CSV buttons */
+.lbp .lb-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.lbp .lb-tile{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--paper);cursor:pointer;text-align:left;min-width:0}
+.lbp .lb-tile b{font-family:"Inter Tight",Inter,sans-serif;font-size:22px;line-height:1.1;letter-spacing:-.02em}
+.lbp .lb-tile span{font-size:12px;color:var(--ink3);line-height:1.3}
+.lbp .lb-tile[aria-pressed=true]{border-color:var(--green);background:var(--green-soft)}
+.lbp .lb-tile[aria-pressed=true] b{color:var(--green)}
+.lbp .lb-ctl{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.lbp .lb-search{flex:1 1 180px;min-width:0;border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:14px;background:var(--paper)}
+.lbp .lb-sel{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink3)}
+.lbp .lb-sel select{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:13px;background:var(--paper);max-width:200px}
+.lbp .lb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.lbp .lb-chips .chip{cursor:pointer}
+.lbp .lb-chips .chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.lbp .lb-sum{margin-top:10px;font-size:13px;color:var(--ink3)}
+.lbp .lb-rows{list-style:none;padding:0;margin:8px 22px 0}
+.lbp .lb-row{padding:12px 0;border-bottom:1px solid var(--line2)}
+.lbp .lb-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lbp .lb-nm{border:0;background:none;padding:0;font:inherit;font-weight:700;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
+.lbp button.lb-nm:hover{text-decoration:underline;text-underline-offset:2px}
+.lbp .lb-meta{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.lbp .lb-last{font-size:13.5px;margin-top:4px}
+.lbp .lb-last time,.lbp .lb-note .muted{color:var(--ink3);font-size:12.5px}
+.lbp .lb-next{font-size:13.5px;margin-top:2px}
+.lbp .lb-next b{color:var(--green)}
+.lbp .lb-note{font-size:13.5px;margin-top:2px;color:var(--ink2)}
+.lbp .lb-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.lbp .lb-acts .btn.sm{padding:6px 12px;font-size:12.5px}
+.lbp .lb-acts [data-lb=later][aria-pressed=true]{background:var(--green-soft);border-color:var(--green-soft);color:var(--green)}
+.lbp .lb-tl{list-style:none;margin:10px 0 0;padding:0 0 0 12px;border-left:2px solid var(--line)}
+.lbp .lb-tl li{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:4px 0;font-size:13px}
+.lbp .lb-tl time{color:var(--ink3);font-variant-numeric:tabular-nums}
+.lbp .lb-tl .lb-tlnotes{display:block}
+.lbp .lb-tl .lb-tlnotes ul{margin:2px 0 0;padding-left:16px}
+.lbp .lb-empty{padding:18px 0;color:var(--ink3)}
+.lbp .lb-changes{margin-top:14px;font-size:13.5px}
+.lbp .lb-changes summary{cursor:pointer;font-weight:600}
+.lbp .lb-changes .lb-tl{margin-left:0}
+.lbp .lb-export{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tg.sv{background:var(--amber-soft);color:var(--warn-ink)}
+.tg.sch{background:var(--green-soft);color:var(--green)}
+@media (max-width:900px){
+  .drawer.lbp{position:fixed;inset:0;width:auto;margin:0;border-radius:0;z-index:95;max-height:none;padding-bottom:28px}
+  .drawer.lbp>*{margin-left:16px;margin-right:16px}
+  .lbp .lb-rows{margin-left:16px;margin-right:16px}
+  .lbp .lb-head{padding:calc(12px + var(--sat)) 16px 10px} /* full screen: clear of the status bar */
+  .lbp .lb-x{width:44px;height:44px;margin:-5px -5px -5px 0}
+  .lbp .lb-tiles{grid-template-columns:repeat(3,1fr)}
+  .lbp .lb-tl li{grid-template-columns:1fr;gap:0}
+}
+@media (min-width:901px){
+  .route.log-mode{grid-template-columns:min(660px,50vw) 1fr}
+  .route.log-mode .rcol>:not(#logbook){display:none !important}
+  .route.log-mode .rcol>#logbook.drawer.lbp{position:static;inset:auto;width:auto;height:auto;flex:1;min-height:0;max-height:none;border-radius:0;box-shadow:none;z-index:auto}
+  /* round 8 item 5 (Jard 10-28): My doors takes the whole page, no map beside it. The map block stays in the tree (the
+     plan's buttons in the header, the Menu's sheets and the toast still work over it) but spans the page unseen, with
+     the map and its overlays hidden; the content sits in a column of at most 960 px, centred. Closing My doors (its ×,
+     Back, another button of the row) brings the plan and the map back as they were */
+  .route.log-mode{grid-template-columns:minmax(0,1fr);position:relative}
+  .route.log-mode .rcol{border-right:0}
+  .route.log-mode .rcol>#logbook.drawer.lbp{padding-left:max(0px,calc((100% - 960px) / 2));padding-right:max(0px,calc((100% - 960px) / 2));scrollbar-gutter:stable both-edges}
+  .route.log-mode .mapwrap{position:absolute;inset:0;pointer-events:none} /* no z-index of its own: the header-docked buttons (z 25) must stay above the app bar (z 20), and the sheets paint over the column by order */
+  .route.log-mode .mapwrap>*{pointer-events:auto}
+  .route.log-mode .mapwrap>:not(.tools,.drawer,.btn.ask,.toast){visibility:hidden}
+}

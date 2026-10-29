@@ -1,0 +1,81 @@
+name = "doors"
+main = "src/entry.js" # not src/worker.js: workerd refuses a main with non-handler named exports (src/entry.js)
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# Static UI and the precomputed data from public/; the Worker (the agent) handles /api/* first, and /tiles/* so the
+# Protomaps fallback gets byte ranges (src/tiles.js), /manifest.webmanifest (R9 carry: a plan in start_url), and the
+# two pages, whose link-preview tags get the request's origin in place of __ORIGIN__ (polish2: src/worker.js handlePage).
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/tiles/*", "/manifest.webmanifest", "/", "/index.html", "/app", "/app.html"]
+
+# KV holds the build's monthly Qloo call counter (calls:<YYYY-MM>), which the Worker checks before every live call,
+# plus cached lazy answers. Required: without it the Worker refuses live calls. scripts/publish.sh creates the
+# namespace, writes its id here, and seeds the counter from data/ledger.jsonl.
+[[kv_namespaces]]
+binding = "DOORS_KV"
+id = "de651bdfe6fc4c5786de9ae63748a0a5"
+
+# review6: Cloudflare's Rate Limiting binding: new live runs per visitor (IPv4 or IPv6 /64) per 60 seconds, enforced at
+# the edge across isolates (the Worker's own KV counters are per isolate first). 3, not 1: a plan of up to three drinker
+# brands starts one run per brand. namespace_id is any number unique to this account; nothing to create in the
+# dashboard. Without the binding (dev, tests) the Worker skips the check.
+[[ratelimits]]
+name = "RUN_LIMITER"
+namespace_id = "7301"
+simple = { limit = 3, period = 60 }
+
+# Searches per visitor across isolates, with no KV write (the free plan's 1,000 writes a day are for runs); the
+# Worker also keeps 40 per 10 minutes and 40 a day in each isolate's memory. The binding's period is 10 or 60 s.
+[[ratelimits]]
+name = "SEARCH_LIMITER"
+namespace_id = "7302"
+simple = { limit = 10, period = 60 }
+
+# Secrets (never in this file):
+#   wrangler secret put QLOO_API_KEY
+#   wrangler secret put GEMINI_API_KEY   (optional; a live run drafts its route rooms' Why this room lines with it; the held lines are baked)
+#   wrangler secret put ORS_API_KEY      (optional; without it routes, drive times and address search fall back to the
+#                                         labelled straight-line estimate / "drop a pin")
+# Optional plain vars: BUILD_BUDGET (default 34000): the build's monthly Qloo ceiling; QLOO_RESERVE (default 2000):
+# live calls also pause below this many calls left on the key this month.
+
+# ---- The chat agent, Doors Agent (src/agent.js; request and reply shapes in docs/CONTRACTS-R9.md §1.4) ----
+# Anthropic answers first (claude-sonnet-5-5 since round 3, 2026-10-25; spec hackathons/qloo/ASK-DOORS-SPEC.md §7):
+#   wrangler secret put ANTHROPIC_API_KEY   (the $70/month cap is set in the Anthropic Console; the code also stops
+#                                            calling Anthropic past AGENT_USD_DAILY, default $30 a UTC day for the whole
+#                                            site: every Claude call, counted in the SPEND_BOOK Durable Object below)
+# Optional plain vars: AGENT_MODEL (claude-opus-5-5 or claude-haiku-5-5; Sonnet 5.5 is the default), AGENT_EFFORT_DESK (medium),
+# AGENT_EFFORT_DRIVE (low), AGENT_USD_DAILY (30 a UTC day since round 3; was 2).
+# Then Workers AI (Llama 3.3 70B, then 3.1 8B, on the free plan's daily neurons); Gemini's free tier is the backup.
+# Nothing to create; when every model is busy or over quota, the assistant answers from its rules ("resting").
+[ai]
+binding = "AI"
+
+# Chat turns per visitor across isolates (the Worker also keeps 20 per 10 minutes and AGENT_DAILY a day in memory).
+[[ratelimits]]
+name = "AGENT_LIMITER"
+namespace_id = "7303"
+simple = { limit = 10, period = 60 }
+# ---- end R9 chat agent ----
+
+# The cost guard: the site's Claude $ a UTC day (src/spend.js), exported by src/entry.js, one counter across every isolate. Agent turns,
+# their web searches, specialist briefs and Day done polish all add to it; past AGENT_USD_DAILY no Claude call starts
+# until 00:00 UTC. A SQLite-backed Durable Object (the free plan has them); wrangler deploy creates it from the
+# migration, nothing to set up in the dashboard. Without the binding (dev, tests) each isolate keeps its own count.
+[[durable_objects.bindings]]
+name = "SPEND_BOOK"
+class_name = "SpendBook"
+
+[[migrations]]
+tag = "v1-spendbook"
+new_sqlite_classes = ["SpendBook"]
+
+# Drive mode's voice when the browser has none (src/voice.js: Workers AI Whisper in, Deepgram Aura-2 out, on the same binding
+# and the agent's share of the day's free neurons). Voice calls per visitor across isolates.
+[[ratelimits]]
+name = "VOICE_LIMITER"
+namespace_id = "7304"
+simple = { limit = 15, period = 60 }

@@ -1,0 +1,258 @@
+/* WHY-VIZ-SPEC: the pictures in "What your plan is based on" (ui/whyviz/*, ui/viz-dom.js). Prefix wv-.
+   Shared classes first (the sentence, the tooltip, the table twin, the legend, the source line), then each picture.
+   Colours are the spec's validated set (§2.4): plan green #1F7F58, big names #CF6612, blue #3E6FB0, violet #8B5CF6,
+   grey #C9C5BC. Motion: prefers-reduced-motion (and ?instant=1 via the renderers) turns the entry animation off. */
+
+/* ---------- shared (lane 1 may extend; lane 2 wrote these first for picture 5) ---------- */
+.wv-h{font-family:"Inter Tight",Inter,sans-serif;font-size:16px;margin:18px 0 6px}
+.wv-say{margin:0 0 10px;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.wv-say b{color:#1F7F58;font-weight:700}
+.wv-say b.big{color:#CF6612}
+.wv-src{font-size:12px;color:var(--ink3);margin:8px 0 0;line-height:1.45}
+.wv-svg{display:block;width:100%;height:auto;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+/* round 4 #5: the details strip under each picture (no floating box over the marks) */
+.wv-strip{display:flex;flex-wrap:wrap;gap:2px 16px;align-items:flex-start;min-height:42px;box-sizing:border-box;margin:6px 0 2px;padding:6px 10px;border-left:3px solid #1F7F58;background:var(--bg);border-radius:0 10px 10px 0;font-size:12.5px;line-height:1.3;color:var(--ink);transition:opacity .2s}
+.wv-strip.idle{color:var(--ink3);border-left-color:var(--line);align-items:center}
+.wv-strip.off{opacity:.62}
+.wv-strip-hint{font-size:12.5px}
+.wv-sr{display:inline-flex;flex-direction:column;min-width:0}
+.wv-sr:first-child b{font-size:13.5px}
+.wv-sr b{font-weight:700}
+.wv-sr small{color:var(--ink3);font-size:11.5px}
+.wv-pic .wv-strip{margin:0}
+.wv-tbl{margin-top:10px;font-size:13px}
+.wv-tbl summary{cursor:pointer;font-weight:600;color:var(--green);padding:4px 0}
+.wv-tblwrap{overflow:auto;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.wv-tbl table{border-collapse:collapse;width:100%;font-size:12.5px}
+.wv-tbl th,.wv-tbl td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.wv-tbl tbody th{font-weight:600}
+.wv-tbl tbody tr:last-child th,.wv-tbl tbody tr:last-child td{border-bottom:0}
+.wv-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink2);margin:6px 0}
+.wv-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:#C9C5BC}
+.wv-legend i.plan{background:#1F7F58}.wv-legend i.big{background:#CF6612}.wv-legend i.grey{background:#C9C5BC}
+.wv-legend i.ring{background:#fff;border:2px solid #1F7F58;width:8px;height:8px}
+.wv-legend i.ring-big{background:#fff;border:2px solid #CF6612;width:8px;height:8px}
+.wv-ctl{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start;margin:6px 0}
+.wv-lbl{font-size:12.5px;font-weight:600;color:var(--ink2);padding-top:5px}
+.wv-segs{display:flex;flex-wrap:wrap;gap:6px}
+.wv-seg{border:1px solid var(--line);background:var(--paper);color:var(--ink2);border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+.wv-seg[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.wv-seg:disabled{opacity:.45;cursor:not-allowed}
+@media (max-width:520px){.wv-ctl{grid-template-columns:1fr}}
+
+/* ---------- 4.1 Match × your variables (picture 1, lane 1): the card, its controls, the dots, Apply ---------- */
+.wv-pic{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;margin:12px 0;display:grid;gap:10px;min-width:0}
+.wv-pic>*{min-width:0}
+.wv-pic .wv-say{margin:0;font:500 16.5px/1.4 "Inter Tight",Inter,sans-serif;letter-spacing:-.01em;text-wrap:pretty}
+/* round 6 #1: the sentence's box is --wv-say-lines lines tall whatever it says (ui/whyviz/explorer.js fitSay); a longer one
+   is cut at a line and "more" opens it. The lines: the longest sentence the controls make at that width. */
+.wv-pic .wv-sayfix{position:relative;--wv-say-lines:6}
+.wv-pic .wv-sayfix .wv-say{height:calc(var(--wv-say-lines) * 1.4em);overflow:hidden}
+.wv-pic .wv-sayfix.open .wv-say{height:auto}
+.wv-saymore{position:absolute;right:0;bottom:0;border:0;margin:0;padding:0 0 0 18px;background:var(--paper);font:600 13px/1.4 Inter,sans-serif;line-height:23.1px;color:var(--green);cursor:pointer;box-shadow:-12px 0 10px var(--paper)}
+.wv-saymore[hidden]{display:none}
+.wv-sayfix.open .wv-saymore{position:static;display:block;padding:2px 0 0;box-shadow:none}
+@media (max-width:520px){.wv-pic .wv-sayfix{--wv-say-lines:10}}
+.wv-pic .wv-svg{border:0;border-radius:0;background:none}
+.wv-pic .wv-src{margin:0;font-size:11.5px}
+.wv-pic .wv-tbl{margin-top:0}
+.wv-ctls{display:grid;gap:2px}
+.wv-pic .wv-ctl{margin:2px 0}
+.wv-seg:focus-visible{outline:2px solid #3E6FB0;outline-offset:2px}
+.wv-fig{position:relative;min-height:120px}
+.wv-fig svg{font-family:Inter,sans-serif;overflow:visible}
+.wv-hit{cursor:pointer;outline:none}
+.wv-hit:focus-visible{stroke:#3E6FB0;stroke-width:2}
+.wv-lbl-t{pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.wv-legend i.ring-big{background:#C9C5BC}
+.wv-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.wv-hint{color:var(--ink3);font-size:12.5px}
+.wv-busy{color:var(--ink2);font-size:12.5px}
+.wv-err{color:#B4561D;font-size:12.5px}
+/* round 5 #3 (Jard 10-27): every control row shows; calm comes from the layout. One label column, rows of joined
+   compact segments (one shape per row, not a cloud of pills), the three groups (the picture's axis · the settings
+   that try a change · the reasons doors are left off) parted by a hairline. */
+.wv-explorer .wv-ctls{gap:0}
+.wv-explorer .wv-ctls+.wv-ctls{border-top:1px solid var(--line2);margin-top:2px;padding-top:4px}
+.wv-explorer .wv-ctls:empty{display:none}
+.wv-explorer .wv-ctl{grid-template-columns:132px 1fr;gap:6px;margin:3px 0;align-items:center}
+.wv-explorer .wv-lbl{padding-top:0;font-size:12.5px;line-height:1.25}
+.wv-explorer .wv-segs{gap:4px 0}
+.wv-explorer .wv-seg{border-radius:0;margin-left:-1px;padding:4px 10px;font-size:12px;font-weight:500;line-height:1.3;position:relative}
+.wv-explorer .wv-seg:first-child{border-radius:8px 0 0 8px;margin-left:0}
+.wv-explorer .wv-seg:last-child{border-radius:0 8px 8px 0}
+.wv-explorer .wv-seg:only-child{border-radius:8px}
+.wv-explorer .wv-seg[aria-pressed="true"]{font-weight:600;z-index:1}
+.wv-explorer .wv-seg:focus-visible{z-index:2}
+.wv-explorer .wv-seg i{font-style:normal;font-weight:500;opacity:.7;margin-left:5px;font-variant-numeric:tabular-nums;display:inline-block;min-width:2ch;text-align:left} /* round 6 #1: a count of 9 or 14 takes the same room, so the row never re-wraps */
+.wv-explorer .wv-seg[aria-pressed="true"] i{opacity:.85}
+/* round 5 #4: the planner's codes under a picked reason: a smaller row, its label in the reason's words */
+.wv-explorer .wv-sub{margin:4px 0 8px} /* round 6 #1: the codes row sits in the list's head under the picture (it used to push the picture down) */
+.wv-explorer .wv-sub .wv-lbl{color:var(--ink3);font-weight:500;padding-left:12px;font-size:12px}
+.wv-explorer .wv-sub .wv-seg{padding:3px 9px;font-size:11.5px}
+@media (max-width:520px){.wv-explorer .wv-ctl{grid-template-columns:1fr;gap:3px;margin:5px 0}.wv-explorer .wv-sub .wv-lbl{padding-left:0}}
+/* round 5 #5: the doors a picked reason leaves, as the drawer's own rows (why.css .w-rows, .w-add), the + on each */
+.wv-logi{display:grid;gap:6px}
+.wv-logi[hidden]{display:none}
+.wv-logi-head{margin:0;font-size:13px;color:var(--ink2)}
+.wv-logi .wv-logi-rows{margin:0}
+.wv-logi .wv-logi-rows li>button[data-door]{padding:8px 12px}
+.wv-logi .wv-logi-rows b{font-size:13.5px}
+.wv-logi .wv-logi-rows small{font-size:12px;line-height:1.3}
+.wv-logi .w-addt{flex:none;display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--green);background:var(--paper);color:var(--green);border-radius:99px;padding:5px 11px 5px 9px;font:600 12.5px/1 Inter,sans-serif;cursor:pointer}
+.wv-logi .w-addt:hover{background:var(--green-soft)}
+.wv-logi .w-addt:focus-visible{outline:2px solid #3E6FB0;outline-offset:2px}
+.wv-logi .wv-logi-pv{display:block;padding:8px 10px;background:var(--bg);outline:none}
+.wv-logi .wv-logi-pv .ws-pv{margin:0}
+.wv-logi .w-more{justify-self:start;border:0;background:none;padding:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--green);cursor:pointer}
+.wv-logi .ws-pv{margin:0}
+@media (prefers-reduced-motion: no-preference){
+  .wv-svg circle.mv{transition:cx .7s cubic-bezier(.2,.7,.2,1),cy .7s cubic-bezier(.2,.7,.2,1),r .3s,fill .4s,opacity .4s}
+  .wv-svg .wv-lbl-t{transition:x .7s cubic-bezier(.2,.7,.2,1),y .7s cubic-bezier(.2,.7,.2,1),opacity .4s}
+  .wv-dots{transition:opacity .25s}
+}
+@media (max-width:900px){
+  .wv-pic{padding:12px 12px 10px;border-radius:14px}
+  .wv-pic .wv-say{font-size:15.5px}
+}
+
+/* ---------- 4.7 The door portrait (lane 1): the pictures, small, for one door ---------- */
+.wv-port{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;gap:12px;min-width:0}
+.wv-port>*{min-width:0}
+.wv-pt-status{margin:0;font-size:13px;font-weight:600;color:var(--ink2)}
+.wv-pt-row{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;align-items:start}
+.wv-pt-block{min-width:0;display:grid;gap:6px}
+.wv-pt-block+.wv-pt-block{margin-top:10px}
+.wv-port .wv-lbl{font:600 11px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:0;margin:0}
+.wv-pt-fig{min-height:100px}
+.wv-pt-ring{max-width:230px;margin:0 auto}
+.wv-pt-ring svg{border:0;background:none;overflow:visible}
+.wv-pt-line{margin:0;font-size:13.5px;line-height:1.4}
+.wv-pt-note{margin:0;font-size:11.5px;color:var(--ink3);line-height:1.4}
+.wv-chips{display:flex;flex-wrap:wrap;gap:5px}
+.wv-chip{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:3px 9px;font-size:12.5px;white-space:nowrap}
+.wv-chip b{color:#1F7F58;font-weight:600;margin-left:4px}
+.wv-chip.city{color:var(--ink3)}
+.wv-chip.city b{color:var(--ink3);font-weight:500}
+.wv-ages{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:6px}
+.wv-age{background:var(--bg);border-radius:10px;padding:6px 8px;display:grid;gap:1px}
+.wv-age small{font-size:10.5px;color:var(--ink3)}
+.wv-age b{font:700 17px "Inter Tight",Inter,sans-serif}
+.wv-age.on{background:#E6EEE9}
+.wv-age.off b{color:#8E8A82;font-weight:500}
+.wv-thread{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px}
+.wv-sis{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:2px 0}
+.wv-sis:hover{color:var(--green)}
+.wv-sis:focus-visible{outline:2px solid #3E6FB0;outline-offset:2px;border-radius:4px}
+.wv-sis i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#C9C5BC;box-sizing:border-box}
+.wv-sis i.ring{background:#fff;border:2px solid #1F7F58}
+.wv-port .wd-when{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.wv-port .wd-when span{border-radius:7px;padding:5px 2px;text-align:center;font-size:11px;font-weight:600;background:var(--line2);color:var(--ink3)}
+.wv-port .wd-when span.on{background:#1F7F58;color:#fff}
+@media (max-width:560px){.wv-pt-row{grid-template-columns:1fr}}
+
+/* ---------- 4.5 Doors that share a crowd (picture 5): the graph, the thread panel, the agent's answer ---------- */
+.wv-th{margin-top:4px}
+.wv-th-fig{position:relative}
+.wv-th-node{cursor:pointer;outline:none}
+.wv-th-node:focus-visible .wv-th-dot,.wv-th-node.wv-hot .wv-th-dot{stroke:#17191B;stroke-width:2.5}
+.wv-th-node.sel text{font-weight:800}
+.wv-th-edges line.lit{stroke:#17191B}
+.wv-th-anim .wv-th-node{transform-box:fill-box;transform-origin:center;animation:wv-th-in .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
+@keyframes wv-th-in{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.wv-th-anim .wv-th-node{animation:none}}
+.wv-th-panel{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wv-th-phead h5{margin:0;font-family:"Inter Tight",Inter,sans-serif;font-size:17px;letter-spacing:-.01em}
+.wv-th-phead p{margin:3px 0 0;font-size:13px;color:var(--ink2)}
+.wv-th-rows{list-style:none;margin:10px 0 0;padding:0}
+.wv-th-rows li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line2)}
+.wv-th-rows li:first-child{border-top:0}
+.wv-th-rows i{flex:none;width:11px;height:11px;border-radius:50%;box-sizing:border-box}
+.wv-th-name{all:unset;box-sizing:border-box;flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.wv-th-name b{font-size:14px}
+.wv-th-name small{font-size:12.5px;color:var(--ink3)}
+.wv-th-name:hover b{color:var(--green)}
+.wv-th-rows li.k-added .wv-th-name small{color:#1F7F58}
+.wv-th-ok{font-size:12.5px;font-weight:700;color:#1F7F58}
+.wv-th-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.wv-th-panel .ws-pv{margin-top:12px}
+.wv-th-agent{margin-top:12px;border-top:1px solid var(--line2);padding-top:12px;font-size:13.5px;line-height:1.45}
+.wv-th-agent p{margin:0 0 8px}
+.wv-th-agent ul{margin:0 0 10px;padding-left:18px;display:grid;gap:6px}
+.wv-th-agent li em{font-style:italic;color:var(--ink2)}
+.wv-th-agent li .lnk,.wv-th-agent .wv-th-open .lnk{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--green);cursor:pointer;text-decoration:none}
+.wv-th-agent li .lnk:hover,.wv-th-open .lnk:hover{text-decoration:underline;text-underline-offset:2px}
+.wv-th-who{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-bottom:8px}
+.wv-th-who b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+.wv-th-who span{font-size:12px;color:var(--ink3)}
+.wv-th-pick{font-weight:600}
+.wv-th-open{margin-top:8px}
+@media (max-width:900px){.wv-th-rows li{gap:8px}.wv-th-acts .btn{flex:1 1 auto;text-align:center}}
+/* the phone (spec §5): the graph keeps only the selected door's label; the panel below names the rest */
+@media (max-width:520px){.wv-th-node:not(.sel) text{display:none}}
+
+/* ---------- 4.2 The city by neighbourhood (picture 2): the pills on the map, the drawer's section ---------- */
+.wv-pill{appearance:none;margin:0;border:0;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 7px;border-radius:13px;background:#fff;border:1px solid #E6E3DC;box-shadow:0 2px 8px rgba(0,0,0,.10);font:600 11.5px Inter,sans-serif;color:#17191B;white-space:nowrap;cursor:pointer;pointer-events:auto}
+.wv-pill i{width:11px;height:11px;border-radius:50%;flex:none}
+.wv-pill span{font-weight:500;color:#4A4F55;font-size:11px}
+.wv-pill.hid{display:none}
+.wv-pill:focus-visible{outline:2px solid #1F7F58;outline-offset:2px}
+.wv-pill.hot{border-color:#17191B;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.wv-pill.hot span{color:#17191B}
+.wv-maplbl{pointer-events:none;display:grid;gap:1px;background:#fff;border:1px solid #E6E3DC;border-radius:10px;padding:5px 9px;box-shadow:0 2px 8px rgba(0,0,0,.10);font:600 11.5px Inter,sans-serif;color:#17191B;white-space:nowrap}
+.wv-maplbl span{font-weight:500;color:#4A4F55;font-size:11px}
+.route.why-mode .mapwrap .maplibregl-marker.wv-maplbl,.route.why-mode .mapwrap .maplibregl-marker.wv-maplbl *{pointer-events:none}
+.route.why-mode .mapwrap .maplibregl-marker.wv-pill,.route.why-mode .mapwrap .maplibregl-marker.wv-pill *{pointer-events:auto} /* why-mode mutes the plan's markers; the pills (the marker element itself) stay live */
+.wv-areas{margin-top:4px}
+.wv-arows{list-style:none;margin:10px 0 0;padding:0;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.wv-arows li{border-top:1px solid var(--line2)}
+.wv-arows li:first-child{border-top:0}
+.wv-arow{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:flex-start;width:100%;padding:9px 12px;font-size:13px;line-height:1.4;cursor:pointer}
+.wv-arow:hover{background:var(--chip)}
+.wv-arow.on{box-shadow:inset 3px 0 0 #1F7F58}
+.wv-arow i{flex:none;width:11px;height:11px;border-radius:50%;margin-top:4px}
+.wv-arow b{font-size:14px}
+.wv-asheet{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wv-ashead h5{margin:0;font-family:"Inter Tight",Inter,sans-serif;font-size:17px}
+.wv-ashead p{margin:3px 0 0;font-size:13px;color:var(--ink2)}
+.wv-asheet h6{margin:12px 0 4px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.wv-adoors{list-style:none;margin:0;padding:0}
+.wv-adoors li{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line2)}
+.wv-adoors li:first-child{border-top:0}
+.wv-adoor{all:unset;box-sizing:border-box;flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column}
+.wv-adoor b{font-size:14px}.wv-adoor small{font-size:12.5px;color:var(--ink3)}
+.wv-adoor:hover b{color:var(--green)}
+@media (max-width:900px){.wv-pill span{display:none}.wv-pill{height:24px;padding:0 9px 0 6px}}
+.wv-th-asking{font-size:12px;color:var(--ink3);font-style:italic}
+
+/* ---------- 4.3 Who is in the room, against the city (picture 3) ---------- */
+.wv-lift{margin-top:4px}
+.wv-lift-row{cursor:default;outline:none}
+.wv-lift-row:focus-visible rect{fill:var(--chip)}
+.wv-lift-row:hover rect,.wv-lift-row.wv-hot rect{fill:var(--chip)}
+.wv-lift-key{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink2);margin:0 0 8px}
+.wv-lift-key i{display:inline-block;vertical-align:-1px;margin-right:6px}
+.wv-lift-key i.dot{width:10px;height:10px;border-radius:50%;background:#1F7F58}
+.wv-lift-key i.tick{width:2px;height:12px;background:#8E8A82;vertical-align:-2px}
+
+/* ---------- 4.4 When these doors fill (picture 4) ---------- */
+.wv-ring{margin-top:4px}
+.wv-ring-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.wv-ring-grid{display:grid;grid-template-columns:1fr;gap:10px;align-items:start} /* the drawer is 640 px: the list goes under the ring, two columns wide */
+.wv-ring-svg{width:492px;max-width:100%;height:auto;border:0;background:none}
+.wv-ring-part,.wv-ring-door{outline:none;cursor:default}
+.wv-ring-part:focus-visible path:first-child,.wv-ring-door:focus-visible path{stroke:#17191B}
+.wv-ring-door:hover path:not([stroke="transparent"]),.wv-ring-door.wv-hot path:not([stroke="transparent"]){stroke-width:4}
+.wv-ring-part.wv-hot path:first-child{stroke:#17191B}
+.wv-ring-sub{margin:4px 0 6px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.wv-ring-list{list-style:none;margin:0;padding:0;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.wv-ring-list li{border-top:1px solid var(--line2)}
+.wv-ring-list li:first-child{border-top:0}
+.wv-ring-list button{all:unset;box-sizing:border-box;display:flex;flex-direction:column;width:100%;padding:7px 10px;cursor:pointer}
+.wv-ring-list button:hover b{color:var(--green)}
+.wv-ring-list b{font-size:13.5px}.wv-ring-list small{font-size:12px;color:var(--ink3)}
+.wv-ring-list li.s-open0 small{color:#1F7F58}
+.wv-ring-list li.s-closed small,.wv-ring-list li.s-missed small{color:#B4531A}
+.wv-ring-svg{display:block;margin:0 auto}
+@media (min-width:600px){.wv-ring-list{display:grid;grid-template-columns:1fr 1fr}.wv-ring-list li{border-top:1px solid var(--line2)}.wv-ring-list li:nth-child(2){border-top:0}}
+@media (max-width:599px){.wv-ring-svg{width:420px}}

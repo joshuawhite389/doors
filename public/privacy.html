@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><!-- round 8 (Jard 10-28 19:53, Brave iOS): the logo sat under the status bar; cover + --sat (css/doors.css) pad every top bar by env(safe-area-inset-top) -->
+<script>
+// round 8 (Jard 10-28 20:18, Brave iOS): a refresh opened the landing ~70 pt down, the logo under the status bar. The
+// browser restores the last scroll position on a reload; a reload now starts at the top (a /#how reload on its
+// section). Restoration is off for the reloaded page's life and on again when it is left, so back/forward keep the
+// browser's own. GUARD: Chromium decides the restore when the reload commits (before this runs) and restores again
+// as late layout lands, so the page also undoes any scroll in its first 3 s that the person didn't make; the app
+// skips that (its router resets the scroll itself and the tour scrolls on its own). scripts/r8scroll-cdp.mjs measures it.
+(function () {
+  var GUARD = true;
+  var nav = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+  var reload = nav ? nav.type === "reload" : !!(performance.navigation && performance.navigation.type === 1);
+  if (!reload) return;
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+    addEventListener("pagehide", function () { history.scrollRestoration = "auto"; });
+  }
+  var touched = false;
+  var stop = function () { touched = true; };
+  ["pointerdown", "touchstart", "wheel", "keydown"].forEach(function (t) { addEventListener(t, stop, { passive: true, capture: true }); });
+  var top = function () {
+    if (touched) return;
+    var h = null;
+    try { h = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (h) h.scrollIntoView(); else if (!location.hash) scrollTo(0, 0);
+  };
+  addEventListener("load", function () {
+    top();
+    if (!GUARD) return;
+    addEventListener("scroll", top);
+    setTimeout(function () { removeEventListener("scroll", top); }, 3000);
+  });
+})();
+</script>
+<title>Doors · Privacy</title>
+<meta name="description" content="What Doors sends where, what it keeps, and what stays on your device: the web app and the iPhone app.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#F7F6F2">
+<link href="/vendor/fonts/fonts.css" rel="stylesheet">
+<link rel="stylesheet" href="/css/doors.css">
+<!-- Every claim below is read from the code (src/, public/, app-mobile/src), audited 2026-10-23. Change the code, change this page. -->
+<style>
+  .legal{max-width:760px;margin:56px 40px 0;padding:0}
+  .legal h1{font-size:40px;font-weight:800;line-height:1.1}
+  .legal .lede{font-size:17px;color:var(--ink2);margin:14px 0 0}
+  .legal h2{font-size:22px;font-weight:700;margin:40px 0 8px}
+  .legal p,.legal li{color:var(--ink2)}
+  .legal ul{padding-left:20px;margin:8px 0}
+  .legal li{margin:6px 0}
+  .legal b{color:var(--ink)}
+  .legal .box{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px 22px;margin:20px 0 0}
+  .legal .box p{margin:4px 0}
+  .legal a{color:var(--green);font-weight:600}
+  @media (max-width:720px){.legal{margin:32px 16px 0}.legal h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="lp">
+  <header class="nav">
+    <a class="logo" href="/app" aria-label="Your plan"><i></i>Doors</a><!-- Jard web review 10-24 #9: opened from the app in its own tab; the logo goes to the app (its newest plan), no Get started -->
+  </header>
+
+  <main class="legal">
+    <h1>Privacy</h1>
+    <p class="lede">Doors has no accounts, no ads, no analytics and no cookies. Your plans live on your device. To rank
+      doors, route your days and answer your questions, some of what you type goes to the services below, and this
+      page says exactly what.</p>
+    <p class="small muted">Applies to the web app at this address and the Doors iPhone app. Last updated October 24, 2026.</p>
+
+    <div class="box">
+      <p><b>The short version</b></p>
+      <p>Your profile, plans, visit notes and contacts are stored on your device only. Doors' server keeps no copy of
+        them. Before any AI model reads your chat or a visit note, the server replaces the names it knows about
+        (yours and your contacts') with "the contact". The server never stores your IP address:
+        it keeps a one-way hash of it, only to count each day's plan builds per visitor (details below).</p>
+    </div>
+
+    <h2>What stays on your device</h2>
+    <ul>
+      <li><b>Web:</b> your brand profile, each saved plan with its door statuses, visit outcomes, notes and contacts,
+        the doors you saved for later, your activity in My doors (what you did at each door, with times),
+        your rules, and copies of plans Doors built for you are kept in your browser's local storage. The chat with
+        Doors and the guided demo's progress are kept in session storage, which clears when you close the tab. The
+        page's own files are cached for offline use; your data is not in that cache.</li>
+      <li><b>iPhone app:</b> the same things, in the app's own storage on the phone, plus a copy of Doors' public
+        city files so a saved plan opens with no signal.</li>
+      <li>Deleting a plan in Doors, clearing the site's data in your browser, or deleting the app removes it. There
+        is no server copy to delete.</li>
+    </ul>
+
+    <h2>What goes to Doors' server, and what it keeps</h2>
+    <p>Doors runs on Cloudflare Workers. Your device talks to Doors' server, never directly to Qloo, Anthropic, Google or
+      OpenRouteService; the API keys stay on the server.</p>
+    <ul>
+      <li><b>Building a plan</b> for a brand or city Doors doesn't already hold sends the brand names and the city
+        you typed. The result (ranked doors for that brand's drinkers in that city, from Qloo) is kept for 30 days
+        under the brand and city, so the next person who asks for the same pair gets it without another Qloo call.
+        Plans built from the public brand-and-city pairs are listed as saved runs others can open. Plans built from
+        "doors that already pour you" are not listed. None of these results contains your profile, name, notes
+        or contacts.</li>
+      <li><b>Asking Doors, or telling it how a visit went,</b> sends your message (up to 600 characters; a visit note
+        up to 400) and a summary of the plan on screen: the city, your brand and product, your price per case and your
+        ask (with the price math Doors works out from them), the plan's days and hours, each door's name, rank, status,
+        outcome and notes, the current door's talking points, and your rules. The names
+        Doors knows about are also sent, only so the server can remove them before a model reads the rest (below).
+        Nothing from a chat or a visit is stored on the server.</li>
+      <li><b>Your IP address:</b> to stop one visitor using up the shared Qloo budget, the server counts live runs per
+        visitor per day. The count is kept under a one-way hash of your IP address (for IPv6, of the first half of it:
+        your network, not your device), salted with a secret and with the date, so it can't be turned back into
+        your address or matched across days. The first plan built on a new day replaces the day's list of hashes; if
+        no one builds one, the whole counter expires after 70 days. Searches and
+        chat turns are also rate-limited per address, in memory and by Cloudflare at its edge; those counts are not
+        stored by Doors.</li>
+      <li><b>Road answers:</b> drive times and distances between coordinates are cached for 30 days (coordinates
+        only). Address lookups are not kept.</li>
+      <li><b>Taking a plan to your home screen (web):</b> Safari gives a home-screen app its own storage, so the page
+        puts your plan (profile, statuses, outcomes, contacts, rules) into the address of its app manifest. The
+        server reads that address to answer and does not store it.</li>
+      <li>The server logs nothing about you. It logs a model's error message when a model fails, which never
+        includes what you sent, and, when it builds a trade brief, that brief's category, city and cost.</li>
+    </ul>
+
+    <h2>Who else sees what</h2>
+    <ul>
+      <li><b>Qloo</b> (taste data): the brand or door names and the city you typed, and Qloo's own ids for venues and
+        brands. Never your name, notes, contacts or IP address. Searches send what you type in the search box (up to
+        80 characters), with the city's name for a place search.</li>
+      <li><b>Anthropic</b> (Claude Sonnet, <code>claude-sonnet-5-5</code>) answers Doors Agent. It is sent your chat messages and visit notes with the
+        plan summary above, after the server replaces the names it knows (yours as you sign your notes, your saved
+        contacts') and names it finds beside a role or a verb ("talked to Sam", "the manager is Priya") or before
+        a personal detail ("Jo is 60") with "the contact", replaces phone numbers and email addresses with "a phone number" and "an email address", and leaves out
+        what a note says about a person (age, gender, origin, religion, sexuality, health, family, body or politics). The
+        names are put back on your screen when the answer arrives. These are pattern checks: a name or a detail they
+        don't recognise is sent as written, so leave out what you wouldn't want a third party to read. When a question needs the web (a door's news, menu or
+        events), Anthropic's web search is sent search words the model writes; it is asked to use only the door's name and
+        the city, which are public, and nothing else checks that;
+        the pages it cites are listed under the answer with their links. Doors also asks Anthropic, with web search,
+        for a short trade brief on a drink category in a city (the category and the city only, nothing of yours) and
+        keeps it on Cloudflare for everyone who plans that category there. Anthropic handles these requests under its
+        own commercial terms. When you tap for polished Day done notes, the day's logged facts (doors, outcomes, your
+        notes) go to Anthropic once, names removed the same way. A model (Anthropic's Claude Sonnet,
+        <code>claude-sonnet-5-5</code>) writes each door's talking points (the opener, the angle, the line for the
+        buyer, the questions, the points, the pushback and the drafted message to the door) and Doors Agent's replies
+        from Qloo's data about that door; the door pages don't say so, this page does. The written opener and message
+        carry a blank where your name goes; your device fills it in, so your name is not sent. For the talking points it is sent Qloo's facts about the door, your brand,
+        product and ask, and who you said drinks it (never your name), and Doors keeps the result on Cloudflare for
+        anyone with the same door, product and ask.</li>
+      <li>When Anthropic can't answer, <b>Cloudflare Workers AI</b> (Meta's Llama) and then <b>Google Gemini</b> are
+        sent the same thing, names removed the same way, on their free tiers and under their own terms; on its free tier, Google may use what it is sent to improve its
+        products. Doors' own
+        rules answer when no model is available. When Doors builds a plan for a brand and city it doesn't hold yet,
+        Gemini also drafts the short lines about each route door (its crowd, the door and an opener) from Qloo's
+        description of that door; nothing of yours is in that request. The crowd and room lines, and the first sentence of
+        many openers, on the doors Doors already holds were drafted the same way, before publishing, by Gemini 3.1
+        Flash-Lite (<code>gemini-3.1-flash-lite</code>); the door pages say written or drafted by a model and leave the
+        model's name here.</li>
+      <li><b>OpenRouteService</b> (roads and addresses): coordinates for drive times; the start address you type, as
+        you type it (from 3 characters), with the city's centre to the nearest kilometre, to find it on the map.</li>
+      <li><b>Map tiles:</b> your browser loads map images from OpenFreeMap (falling back to Doors' own copy, then
+        OpenStreetMap). The iPhone app shows Apple Maps. Like any website, these services see your IP address
+        and which part of the map you look at.</li>
+      <li><b>Venue photos</b> are loaded from Qloo's image server, which sees your IP address.</li>
+      <li><b>Navigate</b> opens Google Maps, Apple Maps or Waze with the door's location, only when you tap it; Google
+        Maps and Apple Maps are also sent where you drive from (the previous door, or your start). When Qloo has no
+        website for a door, its link opens a DuckDuckGo search for the door's name and city.</li>
+      <li><b>Voice</b> goes to <b>Cloudflare Workers AI</b>. Tapping the microphone records what you say until you
+        stop talking and sends that short clip to OpenAI's Whisper model on Workers AI to turn it into words (on the
+        web, drive mode first tries your browser's own speech recognition; Chrome sends that audio to Google). Spoken
+        answers and read-alouds come from Deepgram's Aura-2 voice on Workers AI, sent the words on screen; when it
+        can't answer, your device's own voice reads them (the guided tour uses only your device's voice). Neither the clip nor the words are stored or logged by
+        Doors, and the iPhone app deletes the clip as soon as it is sent. On your first visit note on the web, Doors may
+        record beside the browser's own recognition, so the clip is ready if the browser hears nothing; it is sent only
+        then and dropped otherwise.</li>
+      <li><b>Cloudflare</b> hosts Doors and handles all of its traffic under its own privacy policy.</li>
+    </ul>
+
+    <h2>What Doors doesn't do</h2>
+    <ul>
+      <li>No accounts or sign-in, no cookies, no analytics, ads or tracking scripts. Fonts and the map library are
+        served by Doors itself, not a third-party CDN.</li>
+      <li>No selling or sharing of your data, and no use of it beyond answering the request you made.</li>
+      <li>Doors is for people at work planning sales visits. It is not meant for children.</li>
+    </ul>
+
+    <h2>Questions</h2>
+    <p>Open an issue on the project's repository: <a href="https://github.com/joshuawhite389/doors/issues" target="_blank" rel="noopener">github.com/joshuawhite389/doors/issues</a>.
+      If this page changes, the date at the top changes with it.</p>
+  </main>
+
+  <footer class="lfoot">
+    <span>Bar and restaurant rankings and listings from <a href="https://www.qloo.com" target="_blank" rel="noopener">Qloo</a>'s taste data.</span>
+    <span><a href="/privacy">Privacy</a></span>
+    <span class="r">Built for the Qloo Agentic Hackathon</span>
+  </footer>
+</div>
+</body>
+</html>

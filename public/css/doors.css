@@ -1,0 +1,767 @@
+/* Doors v2 design system: tokens and atoms from the approved mockup (../mockup-doors/template.html). Light only. */
+:root{
+  --bg:#F7F6F2; --paper:#FFFFFF; --ink:#17191B; --ink2:#4A4F55; --ink3:#62676D; --line:#E6E3DC; --line2:#EFEDE7;
+  --green:#2F5D4E; --green-ink:#FFFFFF; --green-soft:#E6EEE9; --amber:#E07B2A; --amber-soft:#FCEBDD; --done:#3C8D5A;
+  --warn-ink:#8a420c; --chip:#E7E5E0; --seg:#ECEAE4; --ph:#75726B;
+  --shadow:0 1px 2px rgba(20,20,20,.04),0 8px 24px rgba(20,20,20,.06);
+  --r:14px; --rl:22px; --appbar:64px;
+  /* round 8 (Jard 10-28, Brave iOS): the page is laid out under the iPhone's status bar (viewport-fit=cover in the
+     three html files), so every top bar pads by the status bar's height: 0 on a desktop and in a browser that keeps
+     the page below it */
+  --sat:env(safe-area-inset-top,0px);
+  color-scheme:light;
+}
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,.disp{font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px;border-radius:6px}
+input[type=date]:focus,input[type=time]:focus{outline:3px solid var(--green);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--ink3)} .small{font-size:13px}
+[hidden]{display:none !important}
+
+/* ---------- atoms ---------- */
+.btn{border:0;border-radius:99px;padding:12px 22px;font-weight:600;font-family:"Inter Tight",Inter,sans-serif;font-size:15px;letter-spacing:.01em;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;white-space:nowrap}
+.btn.primary{background:var(--green);color:var(--green-ink)}
+.btn.primary:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.btn.line{background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+.btn.sm{padding:8px 14px;font-size:13px}
+.logo{display:flex;align-items:center;gap:8px;font-family:"Inter Tight",Inter,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.03em;text-decoration:none;color:var(--ink)}
+.logo i{width:18px;height:24px;border:3px solid var(--ink);border-radius:9px 9px 2px 2px;position:relative;display:inline-block}
+.logo i:after{content:"";position:absolute;right:3px;top:9px;width:3px;height:3px;border-radius:50%;background:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 12px;font-size:13px;background:var(--paper);border:1px solid var(--line)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--amber-soft);color:#9a4a10;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
+.avatar.blank{background:var(--chip);color:var(--ink2)}
+.demo-pill{background:var(--amber-soft);color:var(--warn-ink);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:600;letter-spacing:.02em}
+
+/* ---------- landing ---------- */
+.lp{max-width:1280px;margin:0 auto}
+.nav{display:flex;align-items:center;gap:36px;padding:calc(22px + var(--sat)) 40px 22px}
+.nav .links{display:flex;gap:28px;font-size:15px;color:var(--ink2)}
+.nav .links a{text-decoration:none}
+.nav .links a:hover{color:var(--ink)}
+.nav .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.hero{padding:70px 40px 0;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+.hero .eyebrow{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--green);background:var(--green-soft);border-radius:99px;padding:6px 13px;margin-bottom:20px}
+.hero h1{font-size:62px;line-height:.98;font-weight:800;letter-spacing:-.04em}
+.hero p.lede{font-size:20px;color:var(--ink2);margin:26px 0 32px;max-width:560px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .saved-plans{margin:14px 0 0;font-size:14px;color:var(--ink2)}
+.hero .saved-plans a{color:var(--green);font-weight:600}
+.hero .saved-plans .lnk{font:inherit;font-weight:600;cursor:pointer} /* intuitiveness audit #8: "N more" lists the rest in place */
+.hero .who{margin-top:28px;font-size:14px;color:var(--ink3);max-width:600px}
+.hero-card{background:var(--paper);border-radius:var(--rl);box-shadow:var(--shadow);overflow:hidden;height:470px;position:relative}
+.hero-card .m{position:absolute;inset:0}
+.hero-card .float{position:absolute;left:20px;bottom:20px;right:90px;z-index:5;background:var(--paper);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;display:flex;gap:12px;align-items:center;transition:opacity .4s}
+.hero-card .float img{width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--line2);flex:none}
+.hero-card .float b{display:block;line-height:1.3}
+.steps3{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:56px 40px 0}
+.steps3 div{border-top:1px solid var(--line);padding-top:16px}
+.steps3 b{font-family:"Inter Tight",Inter,sans-serif;font-size:17px;display:block;margin-bottom:4px}
+.steps3 span{color:var(--ink2);font-size:14px}
+.lsec{padding:96px 40px 0}
+.lsec>h2{font-size:34px;font-weight:700;max-width:760px}
+.lsec>p.sub{color:var(--ink2);font-size:17px;max-width:720px;margin:10px 0 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px}
+.card{background:var(--paper);border-radius:var(--rl);box-shadow:var(--shadow);padding:28px 30px}
+.card h3{font-size:21px;margin-bottom:8px}
+.card p{color:var(--ink2);margin:0 0 10px}
+.card ul{margin:10px 0 0;padding-left:18px;color:var(--ink2)}
+.card li{margin-bottom:6px}
+.price{font-family:"Inter Tight",Inter,sans-serif;font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 2px}
+.price small{font-size:15px;font-weight:500;color:var(--ink2);letter-spacing:0}
+.tagline{margin:96px 40px 0;background:var(--green-soft);color:var(--green);border-radius:var(--rl);padding:30px 34px;font-family:"Inter Tight",Inter,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+.tagline span{display:block;font-family:Inter,sans-serif;font-size:15px;font-weight:500;margin-top:6px;letter-spacing:0}
+.lfoot{margin:72px 40px 0;padding:24px 0 48px;border-top:1px solid var(--line);display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:var(--ink3)}
+.lfoot .r{margin-left:auto}
+
+/* ---------- app shell ---------- */
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column}
+.appbar{display:flex;align-items:center;gap:16px;padding:calc(14px + var(--sat)) 24px 14px;background:var(--paper);border-bottom:1px solid var(--line);height:calc(var(--appbar) + var(--sat));flex:none;position:relative;z-index:20}
+.appbar .who{display:flex;align-items:center;gap:10px;margin-left:14px;padding-left:18px;border-left:1px solid var(--line);min-width:0}
+.appbar .who b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .who .sub{font-size:13px;color:var(--ink3);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.view{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
+.appfoot{flex:none;font-size:12px;color:var(--ink3);padding:5px 24px;border-top:1px solid var(--line2);background:var(--paper);display:flex;gap:4px 16px;flex-wrap:wrap}
+/* ease #4: "Saved on this device only." once on screen: the Export panel says it while it's open */
+.app:has(#export:not([hidden])) #saved-note{display:none}
+
+/* ---------- profile (frames 2, 8) ---------- */
+.profile{display:grid;grid-template-columns:1fr 360px;flex:1;min-height:0}
+/* intuitiveness audit #10: at a wide screen the form (600 px of fields) and the rail sit together in the middle, not
+   a form on the left, ~400 px of nothing, then the rail */
+/* r2 (Jard 10-24): the rail used to stop short of the right edge at wide screens ("separated from the edge"). The pair
+   stays in the middle; the rail's column runs on to the edge, its text keeps its 360 px */
+@media (min-width:901px){.profile{grid-template-columns:minmax(0,1fr) minmax(0,728px) 360px minmax(0,1fr)}.pform{grid-column:2}.pside{grid-column:3 / -1}.pside-in{max-width:304px}}
+.pform{padding:40px 64px 56px}
+.pform h2{font-size:34px;font-weight:700}
+.pform .sub{color:var(--ink2);margin:6px 0 26px}
+.field{margin-bottom:22px;position:relative;max-width:600px}
+.field>label,.field>.lbl{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.field .hint{font-size:13px;color:var(--ink3);margin-top:5px}
+.field .err{font-size:13px;color:#A4441A;margin-top:5px}
+.inp{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:46px;font-size:15px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}
+.inp:focus-within,.inp.focus{border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.inp input,.inp select{border:0;outline:0;background:transparent;flex:1;min-width:120px;padding:2px 0;font-size:15px}
+input.inp,select.inp{display:block;outline:0}
+.inp ::placeholder,input.inp::placeholder{color:var(--ph)}
+select.inp{appearance:none;background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23868B91' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 14px center;padding-right:36px}
+.tag{background:var(--green-soft);color:var(--green);border-radius:99px;padding:3px 6px 3px 10px;font-size:13px;font-weight:500;display:inline-flex;gap:4px;align-items:center}
+.tag button{border:0;background:transparent;color:inherit;padding:0 4px;font-size:15px;line-height:1;border-radius:99px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px}
+.row2 .field{max-width:none;align-self:start} /* a list opens right under its input, not under the taller cell beside it */
+.dd{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:30;padding:6px;max-height:320px;overflow:auto}
+.dd [role=option]{padding:9px 12px;border-radius:8px;font-size:14px;display:flex;justify-content:space-between;gap:12px;cursor:pointer}
+.dd [role=option].hl,.dd [role=option]:hover{background:var(--bg)}
+.dd small{color:var(--ink3);white-space:nowrap}
+.dd .osub{display:block;color:var(--ink3);font-size:12.5px}
+.dd .note{padding:8px 12px;font-size:13px;color:var(--ink3)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.tog{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:7px 14px;font-size:14px;color:var(--ink2)}
+.tog[aria-pressed=true]{background:var(--green-soft);border-color:var(--green-soft);color:var(--green);font-weight:500}
+.tog[aria-pressed=true]:before{content:"✓ "}
+.adv{margin-top:8px;font-size:14px;color:var(--ink2)}
+.adv summary{cursor:pointer;color:var(--ink2)}
+.adv label{display:flex;gap:8px;align-items:center;margin-top:8px}
+.addr{display:flex;gap:8px}
+.addr .inp{flex:1}
+.pinmap{height:260px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:10px;position:relative}
+.pinmap .m{position:absolute;inset:0}
+.pinmap .tip{position:absolute;left:10px;top:10px;z-index:5;background:var(--paper);border-radius:99px;padding:5px 12px;font-size:13px;box-shadow:var(--shadow)}
+.wins{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.win{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px}
+.win b{width:64px}
+.win input{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--bg)}
+.visit{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:14px}
+.visit label{font-weight:600}
+.visit input{width:72px}
+.build{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px}
+.build .need{font-size:13px;color:var(--ink3)}
+.pside{background:var(--paper);border-left:1px solid var(--line);padding:32px 28px}
+/* judge pass 2 (29): the column keeps its full height and colour; its text stays in view while the form scrolls */
+@media (min-width:901px){.pside-in{position:sticky;top:32px}}
+.pside h3{font-size:15px;margin-bottom:14px}
+.pside p{color:var(--ink2);font-size:14px;margin:0 0 12px}
+
+/* ---------- plan (frame 4) ---------- */
+.route{display:grid;grid-template-columns:420px 1fr;flex:1;min-height:0;height:100%}
+.rcol{background:var(--paper);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;position:relative}
+.daytabs{display:flex;gap:6px;padding:14px 20px 0;flex-wrap:wrap}
+.daytabs button{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--ink2);display:inline-flex;gap:6px;align-items:center}
+/* judge pass 4 (N15) + daytabs: the list's tab alone is filled; a day whose route a map chip hid keeps a faded dot */
+.daytabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.daytabs button[data-off] i{opacity:.3}
+.daytabs i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.rhead{padding:16px 24px 14px;border-bottom:1px solid var(--line2)}
+.rhead h2{font-size:24px;font-weight:700}
+.rhead .meta{color:var(--ink2);font-size:14px;margin-top:4px}
+.prog{height:6px;background:var(--line2);border-radius:99px;margin-top:14px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--done);border-radius:99px;width:0}
+.progtxt{font-size:12px;color:var(--ink3);margin-top:6px}
+.stops{list-style:none;margin:0;padding:6px 12px;overflow:auto;flex:1}
+.stop{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:11px 12px;border-radius:12px;transition:background .2s;cursor:default}
+.stop:hover,.stop.sel{background:var(--bg)}
+.stop .pin{width:30px;height:30px;border-radius:50%;background:var(--amber);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;font-family:"Inter Tight",Inter,sans-serif}
+.stop .nm{font-weight:600;font-size:15px;line-height:1.25}
+.stop .sb{font-size:13px;color:var(--ink3)}
+.stop .eta{font-size:13px;color:var(--ink2);text-align:right;white-space:nowrap}
+.leg{font-size:12px;color:var(--ink3);padding:0 0 0 58px;margin:-2px 0;list-style:none}
+.empty{padding:28px 24px;color:var(--ink2)}
+.rfoot{border-top:1px solid var(--line2);padding:12px 24px;font-size:12.5px;color:var(--ink3);line-height:1.5}
+.rfoot p{margin:0 0 4px}
+.mapwrap{position:relative;min-height:0}
+.mapwrap .m{position:absolute;inset:0}
+.tools{position:absolute;right:24px;top:20px;z-index:5;display:flex;gap:8px}
+.tools .btn{background:var(--paper);box-shadow:var(--shadow);color:var(--ink)}
+.legend{position:absolute;left:24px;bottom:24px;z-index:5;background:rgba(255,255,255,.92);border-radius:12px;padding:10px 14px;font-size:12px;color:var(--ink2);line-height:1.8}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.drawer{position:absolute;right:24px;top:72px;z-index:6;width:min(380px,calc(100% - 48px));background:var(--paper);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;font-size:14px}
+.drawer h3{font-size:17px;margin-bottom:8px}
+.drawer .mback{display:block;margin:0 0 8px;font-size:14px} /* Jard web review 10-24 #10: Back to the Menu */
+.drawer p{margin:0 0 8px;color:var(--ink2)}
+.rankline{background:var(--green-soft);color:var(--green);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+.mapnote{position:absolute;left:24px;top:20px;z-index:5;background:var(--paper);border-radius:99px;box-shadow:var(--shadow);padding:6px 14px;font-size:12px;color:var(--ink3)}
+
+/* stub (demo) */
+.stub{flex:1;display:grid;place-items:center;padding:40px 20px;text-align:center}
+.stub h2{font-size:34px;margin-bottom:10px}
+.stub p{color:var(--ink2);max-width:520px;margin:0 auto 22px}
+.stub .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ---------- map pins (MapLibre markers) ---------- */
+.mpin{width:30px;height:30px;border-radius:50%;background:var(--amber);color:#fff;display:grid;place-items:center;font:700 13px "Inter Tight",Inter,sans-serif;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.mpin.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.mpin.done{background:var(--done)}
+.mstart{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);font-size:15px}
+.maplibregl-ctrl-attrib{font-size:10px}
+.maplibregl-map{font-family:Inter,system-ui,sans-serif}
+@media (prefers-reduced-motion:reduce){.mpin.pop{animation:none}*,*::before,*::after{transition:none !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important}}
+
+/* ---------- phone ---------- */
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;padding:36px 16px 0;gap:28px}
+  .hero h1{font-size:42px}
+  .hero p.lede{font-size:17px;margin:18px 0 24px}
+  .hero-card{height:340px}
+  .hero-card .float{right:20px}
+  .nav{padding:calc(16px + var(--sat)) 16px 16px;gap:16px}
+  .nav .links{display:none}
+  .steps3,.two{grid-template-columns:1fr}
+  .steps3{padding:40px 16px 0}
+  .lsec{padding:64px 16px 0}
+  .lsec>h2{font-size:28px}
+  .tagline{margin:64px 16px 0;font-size:19px;padding:22px}
+  .lfoot{margin:48px 16px 0}
+  .lfoot .r{margin-left:0}
+  .profile{grid-template-columns:1fr}
+  .pform{padding:28px 16px 40px}
+  .pform h2{font-size:28px}
+  .pside{border-left:0;border-top:1px solid var(--line);padding:24px 16px}
+  .appbar{padding:calc(12px + var(--sat)) 16px 12px;gap:10px}
+  .appbar .who{margin-left:4px;padding-left:12px}
+  .app{height:auto;min-height:100dvh}
+  .view{overflow:visible;flex:1 0 auto}
+  .route{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}
+  .stops{overflow:visible;flex:none}
+  .mapwrap{grid-row:1;min-height:300px}
+  .rcol{grid-row:2;border-right:0}
+  .tools{right:12px;top:12px}
+  .legend{display:none}
+  .mapnote{left:12px;top:12px}
+}
+@media (max-width:520px){
+  .row2{grid-template-columns:1fr;gap:0}
+  .appbar .right .btn .long{display:none}
+  .win{flex-wrap:wrap;gap:6px 8px}
+  .win b{width:100%}
+}
+
+/* ---------- B1: profile fields 7–9 ---------- */
+.dates{margin-top:16px}
+.dates>.lbl{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.win.off{color:var(--ink2)}
+.win.off .lnk{margin-left:auto}
+.moreday{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink2)}
+.moreday .dt{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--paper)}
+.win .wstart{margin-left:auto;font-size:13px;color:var(--ink2);display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.win .x,.notice .x{border:0;background:transparent;font-size:18px;line-height:1;color:var(--ink3);padding:2px 6px;border-radius:8px}
+.lnk{border:0;background:transparent;padding:0;color:var(--green);text-decoration:underline;text-underline-offset:2px;font-size:13px}
+.wedit{position:relative;background:var(--paper);border:1px dashed var(--line);border-radius:12px;padding:10px;margin-top:-4px}
+.wedit .pinmap{height:220px}
+details.opt{max-width:600px;margin:4px 0 22px;border-top:1px solid var(--line);padding-top:14px}
+details.opt summary{cursor:pointer;font-size:14px;margin-bottom:12px}
+details.opt summary .muted{font-weight:400;margin-left:6px}
+/* Your rules in Edit profile (ui/rules.js; moved off the door card, ease audit #9) */
+#fd-rules .rlist{list-style:none;margin:0 0 10px;padding:0}
+#fd-rules .rlist li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2)}
+#fd-rules .rform{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 10px}
+#fd-rules .rform label{font-size:13px;color:var(--ink2)}
+#fd-rules .rform .inp{flex:1 1 120px;min-width:0}
+
+/* ---------- B1: plan view ---------- */
+.daytabs .wk{margin-left:auto}
+/* small (intuitiveness audit pass 1): at a desktop width the tabs wrapped to two rows in the 420 px column, "All days"
+   alone on the right. One row: a day's chip is its date (its count is in the header under it); a plan of 4+ days
+   scrolls sideways (as a maps app's chips do), the chosen one kept in view (plan.js drawTabs), a fade where there's more */
+.daytabs .tarr{display:none} /* round 4 item 3: the scroll arrows show at a desktop width only (below) */
+@media (min-width:901px){
+  .daytabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;flex:none;scrollbar-width:none;overscroll-behavior-x:contain}
+  .daytabs::-webkit-scrollbar{display:none}
+  /* round 4 item 3: the side padding is two spacer items, not padding, so the sticky arrows (below) reach the strip's
+     edges (a sticky item stops at the scroller's content box) */
+  .daytabs{gap:4px;padding-left:0;padding-right:0}
+  .daytabs::before{content:"";flex:none;width:12px}
+  .daytabs::after{content:"";flex:none;width:8px}
+  .daytabs button{flex:none;white-space:nowrap;padding:5px 9px;gap:5px}
+  .daytabs .dn{display:none} /* the counts are in the header just below ("9 doors · 19.2 mi", "55 ranked") */
+  .daytabs .wk{margin-left:0}
+  /* round 4 item 3: an arrow button at each edge that has more past it (sticky at the scrollport's edge, over a paper
+     fade), in place of the edge fade alone, which read as nothing to do. Zero net width (its margin takes back its width
+     and the gap) so it appearing or going moves no tab */
+  .daytabs .tarr{display:inline-flex;position:sticky;z-index:3;flex:none;align-self:stretch;align-items:center;width:40px;padding:0;border:0;border-radius:0;color:var(--ink);cursor:pointer}
+  .daytabs .tarr.l{left:0;margin-right:-44px;justify-content:flex-start;padding-left:4px;background:linear-gradient(90deg,var(--paper) 55%,transparent)}
+  .daytabs .tarr.l svg{transform:scaleX(-1)}
+  .daytabs .tarr.r{right:0;margin-left:-44px;justify-content:flex-end;padding-right:4px;background:linear-gradient(90deg,transparent,var(--paper) 45%)}
+  .daytabs:not(.more-l) .tarr.l,.daytabs:not(.more-r) .tarr.r{display:none}
+  .daytabs .tarr:hover{color:var(--green)}
+  .daytabs.is-scrolling{cursor:grabbing;user-select:none}
+  .daytabs.is-scrolling button{pointer-events:none}
+}
+.notices:empty{display:none}
+.notices{padding:10px 20px 0}
+.notice{display:flex;gap:8px;align-items:flex-start;background:var(--amber-soft);color:var(--warn-ink);border-radius:12px;padding:10px 8px 10px 14px;font-size:13px}
+.offline-note{margin:10px 20px 0;background:var(--line2);color:var(--ink2);border-radius:12px;padding:8px 14px;font-size:13px} /* ease audit 3 #10e */
+.offline-note[hidden]{display:none}
+.notice .x{color:var(--warn-ink)}
+.pnotes{list-style:none;margin:10px 24px 0;padding:10px 12px;background:var(--bg);border-radius:12px;font-size:13px;color:var(--ink2)}
+.pnotes li+li{margin-top:4px}
+details.pnotes summary{cursor:pointer;list-style:none;font-weight:600;color:var(--ink2)}
+details.pnotes summary::-webkit-details-marker{display:none}
+details.pnotes summary::after{content:" ▸";color:var(--ink3)}
+details.pnotes[open] summary::after{content:" ▾"}
+details.pnotes ul{list-style:none;margin:6px 0 0;padding:0}
+details.pnotes li+li{margin-top:4px}
+#p-body{display:flex;flex-direction:column;min-height:0;flex:1}
+.stop{grid-template-columns:34px 1fr auto 28px;position:relative}
+.stop .body{min-width:0}
+.stop .nm{border:0;background:transparent;padding:0;text-align:left;font-weight:600;font-size:15px;line-height:1.25;cursor:pointer}
+.stop .nm:hover{text-decoration:underline;text-underline-offset:2px}
+.stop.visited .nm{text-decoration:line-through;color:var(--ink3)}
+.stop.rest .pin{font-size:11px}
+/* intuit pass 2 #4: on Your list the rank reads "#1" in a tag like the map's ("#14"), never the day views' filled stop-number
+   circle (the founder couldn't tell Nomadic's rank 1 from "Tue · stop 3"); its border keeps the day's colour */
+.stop.rest .pin.rk{width:auto;min-width:30px;height:24px;margin-top:3px;padding:0 4px;border-radius:7px;background:#fff;border:2px solid;color:var(--ink);font-size:11.5px}
+.tgs:empty{display:none}
+.tgs{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tg{font-size:11px;border-radius:99px;padding:1px 8px;background:var(--seg);color:var(--ink2)}
+.tg.c{background:var(--green-soft);color:var(--green)}
+.tg.st-visited{background:#E3F1E8;color:var(--done)}
+.tg.st-notfit,.tg.st-talked{background:var(--chip);color:var(--ink2)}
+.more{border:0;background:transparent;width:28px;height:28px;border-radius:8px;color:var(--ink3);font-size:18px;line-height:1}
+.more:hover,.more[aria-expanded=true]{background:var(--seg);color:var(--ink)}
+.menu{position:absolute;right:8px;top:calc(100% - 8px);z-index:12;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;min-width:190px}
+.menu button{border:0;background:transparent;text-align:left;padding:8px 12px;border-radius:8px;font-size:14px}
+.menu button:hover:not([disabled]),.menu button:focus-visible{background:var(--bg)}
+.menu button[disabled]{color:var(--ink3);cursor:default}
+.menu button[aria-current=true]{font-weight:600}
+.menu button[aria-current=true]:after{content:" ✓";color:var(--done)}
+.dayhead{list-style:none;padding:14px 12px 4px;font-size:13px;color:var(--ink2)}
+.weekhead{list-style:none;padding:18px 12px 2px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.weekhead .areas{display:block;margin-top:2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink2)}
+.rhead .meta.weeks{margin-top:4px;font-weight:600;color:var(--ink2)}
+.dayhead button{border:0;background:transparent;padding:0;display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--ink2)}
+.dayhead i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.addbar{padding:8px 24px 12px}
+.addpane{padding:16px 24px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.addpane .field{margin-bottom:12px}
+.seg{display:inline-flex;background:var(--seg);border-radius:99px;padding:3px;align-self:flex-start}
+.seg button{border:0;background:transparent;border-radius:99px;padding:6px 14px;font-size:13px;color:var(--ink2)}
+.seg button[aria-selected=true]{background:var(--paper);color:var(--ink);box-shadow:var(--shadow);font-weight:500}
+.arow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.arow .inp{flex:1;min-width:180px}
+.addpane .hint{font-size:13px;color:var(--ink3)}
+.results{list-style:none;margin:0;padding:0}
+.results li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line2)}
+.results .note{color:var(--ink3);font-size:13px}
+.addpane .btn.ghost{align-self:flex-start}
+.tools{flex-wrap:wrap;justify-content:flex-end;left:24px}
+/* judge pass 2 (24): the tools wrap before they reach the Run-the-route pill top left (a narrow map: Why these rooms) */
+@media (min-width:901px){.mapwrap .tools{left:300px}}
+.tools a.btn{text-decoration:none}
+.check{display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:14px}
+.check input{margin-top:4px}
+.strip{list-style:none;margin:8px 0;padding:0}
+.strip li{display:grid;grid-template-columns:1fr 90px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line2)}
+.strip .bar{height:6px;background:var(--line2);border-radius:99px;overflow:hidden}
+.strip .bar i{display:block;height:100%;background:var(--green)}
+.drawer{max-height:calc(100% - 96px);overflow:auto}
+.weeklegend{position:absolute;left:24px;bottom:24px;z-index:5;display:flex;gap:8px;flex-wrap:wrap;max-width:60%}
+.weeklegend span{background:var(--paper);border-radius:99px;box-shadow:var(--shadow);padding:7px 14px;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+.weeklegend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.maptip{position:absolute;left:50%;transform:translateX(-50%);bottom:24px;z-index:7;background:var(--ink);color:#fff;border-radius:99px;padding:8px 16px;font-size:13px}
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:24px;z-index:8;background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;font-size:13.5px;max-width:min(520px,calc(100% - 32px))}
+.mpin.faint{opacity:.45;transform:scale(.8)}
+.mstart.contact{background:var(--green)}
+@media (max-width:900px){
+  .route{grid-template-rows:auto auto;grid-template-columns:minmax(0,1fr)}
+  .mapwrap,.rcol{min-width:0}
+  .tools{position:static;padding:10px 12px;background:var(--bg);flex-wrap:wrap;justify-content:flex-start}
+  .tools .btn{flex:none}
+  .mapwrap{display:flex;flex-direction:column}
+  .mapwrap .m{position:relative;height:300px;inset:auto}
+  .drawer{position:static;width:auto;margin:0 12px 12px;max-height:none}
+  .weeklegend{top:12px;bottom:auto;left:12px;max-width:none;right:12px}
+  .stop{grid-template-columns:30px 1fr auto 28px;gap:8px;padding:10px 6px}
+  .win .wstart{margin-left:0;width:100%}
+}
+.eta .warn{color:#A4441A}
+@media (max-width:520px){.win{position:relative;padding-right:36px}.win .x{position:absolute;right:6px;top:6px}}
+@media (max-width:900px){.mapwrap .runbar{top:244px;bottom:auto;left:12px}}
+/* F3: sample brand, start chips, re-plan toast, planner reasons, overlap sentences */
+.pform .sub{margin-bottom:14px}
+.sampleask{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 22px;font-size:13.5px}
+.samplenote{margin:0 0 22px;padding:10px 14px;border-radius:12px;background:var(--green-soft);color:var(--green);font-size:14px}
+.startchips{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:10px}
+.startchips[hidden]{display:none}
+.startchips .tog,.wedit .tog{padding:5px 12px;font-size:13px}
+.wedit .chips{margin-top:8px}
+.toast{display:flex;gap:14px;align-items:center}
+.toast[hidden]{display:none}
+.toast .lnk{color:#fff;text-decoration:underline;white-space:nowrap;background:none;border:0;font:inherit;cursor:pointer;padding:0}
+.stop .why{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.stop .why:before{content:"↳ ";color:var(--ink3)}
+.overlap{margin:6px 0 10px;padding-left:18px;font-size:13.5px}
+.overlap li+li{margin-top:2px}
+@media (max-width:700px){.toast{position:fixed;left:12px;right:12px;bottom:16px;transform:none;max-width:none;justify-content:space-between;z-index:40}}
+.field .hint.addroff{color:var(--warn-ink)}
+/* G4: drag a stop (grip, ghost, drop line), locks, re-routed */
+.stops.dnd .stop{grid-template-columns:18px 30px 1fr auto 28px;gap:10px}
+.grip{border:0;background:transparent;padding:0;width:18px;height:32px;color:var(--ink3);font-size:16px;line-height:1;cursor:grab;touch-action:none;border-radius:6px}
+.grip:hover,.grip:focus-visible{color:var(--ink);background:var(--seg)}
+.grip.off{cursor:default}
+.stop.dragging{opacity:.35}
+.stop.ghost{grid-template-columns:18px 30px 1fr auto 28px;gap:10px;position:fixed;z-index:60;pointer-events:none;background:var(--paper);box-shadow:0 10px 30px rgba(0,0,0,.18);list-style:none;margin:0}
+.stop.ghost .menu{display:none}
+.is-dragging,.is-dragging *,.stop.ghost{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+.stop.drop-before{box-shadow:inset 0 3px 0 var(--ink)}
+.stop.drop-after{box-shadow:inset 0 -3px 0 var(--ink)}
+.daytabs .drop-on,.dayhead .drop-on{outline:2px dashed var(--ink);outline-offset:2px}
+.tg.lk{border:0;cursor:pointer;background:var(--ink);color:#fff;font:inherit;font-size:11px}
+.tg.lk:hover{background:#000}
+.tg.rr{background:#FFF1D6;color:#8A5A00}
+/* Jard 10-23: the time column holds the time only; when it's open sits under the row's words (.ln2) */
+.stop .eta{font-weight:600;color:var(--ink)}
+.stop .ln2{font-size:13px;color:var(--ink3)}
+.stop .ln2::first-letter{text-transform:uppercase}
+.stop .sb .nw{white-space:nowrap}
+.ln2 .warn{color:#A4441A}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 6px;width:auto}
+@media (max-width:900px){.stops.dnd .stop{grid-template-columns:18px 30px 1fr auto 28px;gap:6px}}
+/* G3: map layer chips, ranked-room markers and cards, Add to */
+.weeklegend button{border:1px solid transparent;background:var(--paper);border-radius:99px;box-shadow:var(--shadow);padding:6px 13px;font-size:13px;display:inline-flex;gap:7px;align-items:center;color:var(--ink)}
+.weeklegend button i{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--c);box-shadow:inset 0 0 0 2px var(--c)}
+.weeklegend button span{background:none;box-shadow:none;padding:0;border-radius:0;display:inline;font-size:inherit}
+.weeklegend button[aria-pressed=false]{background:rgba(255,255,255,.72);color:var(--ink3);box-shadow:none;border-color:var(--line)}
+.weeklegend button[aria-pressed=false] i{background:transparent}
+.weeklegend button.cur{border-color:var(--ink)}
+.weeklegend i.rk{width:auto;height:16px;min-width:16px;border-radius:4px;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--ink);font:700 10px/16px "Inter Tight",Inter,sans-serif;font-style:normal;text-align:center;color:var(--ink)}
+.weeklegend button[data-layer=rest][aria-pressed=true]{background:var(--ink);color:#fff}
+.weeklegend button[aria-pressed=false] i.rk{opacity:.6}
+.mrank{min-width:24px;height:24px;padding:0 5px;border-radius:7px;background:#fff;border:2px solid var(--ink);color:var(--ink);font:700 11.5px/20px "Inter Tight",Inter,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+.mrank:hover,.mrank:focus-visible{background:var(--ink);color:#fff}
+.mrank.added{border-color:var(--green);color:var(--green)}
+.mrank.dot{min-width:12px;width:12px;height:12px;padding:0;border-radius:50%;border-width:2px;font-size:0;line-height:0} /* intuitiveness audit #6: a tag that would collide */
+.rpop .maplibregl-popup-content{border-radius:14px;padding:14px 16px 12px;box-shadow:var(--shadow),0 2px 10px rgba(0,0,0,.12);font-size:13.5px;line-height:1.45}
+.rpop h4{font-size:16px;margin:0 18px 2px 0}
+.rpop .rk{color:var(--ink2);font-size:12.5px;margin-bottom:6px}
+.rpop p{margin:0 0 6px;color:var(--ink2)}
+.rpop .lnks{display:flex;gap:8px;align-items:center;margin:8px 0 4px;font-size:13px}
+.rpop .lnks .btn{padding:8px 12px;font-size:13px;font-weight:600;text-decoration:none}
+.rpop .lnks .btn.primary{flex:1}
+.rpop .kv{color:var(--ink2);font-size:12.5px;margin-bottom:2px}
+.rpop .crowd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rpop .pchero{height:72px;margin:-14px -16px 10px;border-radius:14px 14px 0 0;overflow:hidden;background:var(--line2)}
+.rpop .pchero img{width:100%;height:100%;object-fit:cover;display:block}
+.rpop:has(.pchero) .maplibregl-popup-close-button{background:rgba(255,255,255,.9);border-radius:50%}
+.rpop .maplibregl-popup-close-button{font-size:18px;width:28px;height:28px;right:4px;top:4px}
+.addto{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.addto .lbl{font-size:12px;font-weight:600;color:var(--ink2);margin-right:2px}
+.addto .chip{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:4px 10px;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}
+.addto .chip:hover{border-color:var(--ink)}
+.addto .chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.addto .chip.auto{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.stop.rest .btn.sm{padding:5px 11px;font-size:12.5px}
+/* WHY-VIZ-SPEC §6: the strip per row (ui/whyviz/strip.js): unknown → everyone knows it, the big-names tick, a dot at the door */
+.stop.rest .lstrip{display:block;margin:3px 0 1px;max-width:100%}
+@media (max-width:900px){
+  .weeklegend{gap:6px}
+  .weeklegend button{padding:5px 10px;font-size:12px;gap:6px}
+  .weeklegend .long{display:none}
+  .stop.rest{grid-template-columns:30px 1fr auto 28px}
+}
+.pcard{display:none}
+@media (max-width:900px){
+  .pcard{display:block;position:relative;margin:10px 12px 0;background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px 12px;font-size:13.5px;line-height:1.45}
+  .pcard .x{position:absolute;right:6px;top:6px;z-index:1;border:0;background:rgba(255,255,255,.9);border-radius:50%;padding:0;display:inline-grid;place-items:center;width:32px;height:32px;color:var(--ink2)} /* round 7: the icon set's ×, centred */
+}
+/* owner review 2 (G2): every room's website, a button on the stop and a small link on its row */
+.stop .wlink{color:var(--green);font-weight:600;white-space:nowrap;text-decoration:none}
+.stop .wlink:hover{text-decoration:underline;text-underline-offset:2px}
+.slinks{margin:10px 0 4px}
+/* J4: Your list. Marked rooms stay in rank order, greyed; a room on a day names it ("Tue · stop 3") */
+.stop.marked .body{opacity:.55}
+.stop.marked .nm{color:var(--ink3)}
+.stop.rest .onday{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.stop.rest .onday i{width:8px;height:8px;border-radius:50%;display:inline-block}
+/* J3: doors a day, on the plan. Small and calm: native selects in the list header and the Week's day heads */
+/* L1: a live run's steps ("Doors is asking Qloo…") */
+.liverun{max-width:640px;margin:0 auto;padding:40px 20px}
+.liverun h2{font-size:28px;margin-bottom:8px}
+.liverun>p{margin-bottom:22px}
+.liverun section{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-top:12px}
+.liverun h3{font-size:15px;margin-bottom:8px}
+.liverun ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.liverun li{display:grid;grid-template-columns:18px 1fr;column-gap:10px;color:var(--ink3)}
+.liverun li:before{content:"";width:10px;height:10px;margin-top:6px;border-radius:50%;border:2px solid var(--line)}
+.liverun li span{grid-column:2}
+.liverun li.done{color:var(--ink)}
+.liverun li.done:before{background:var(--ink);border-color:var(--ink)}
+.liverun li.now{color:var(--ink2)}
+.liverun li.now:before{border-color:var(--ink2);animation:lrpulse 1.2s ease-in-out infinite}
+@keyframes lrpulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.liverun li.now:before{animation:none}}
+/* L2 (owner review 6): the Examples row: a made-up rep per drinker; three columns on a wide screen, a strip to swipe on
+   a phone. A search row in the brand list reads as an action. */
+.examples{display:flex;gap:8px 12px;align-items:flex-start;margin:0 0 24px;min-width:0}
+.exfold{flex:1;min-width:0}
+.exfold[open] .exhead{margin-bottom:8px}
+.pform{min-width:0}
+.exhead{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;cursor:pointer;list-style:none;padding:6px 0}
+.exhead::-webkit-details-marker{display:none}
+.exhead .lbl{color:var(--green)}
+.exhead .lbl::after{content:" ▾"}
+.exfold[open] .exhead .lbl::after{content:" ▴"}
+.exhead .lbl{font-weight:600;font-size:14px}
+.exhead .muted{font-size:13px;flex:1 1 220px}
+.examples #f-clear{margin-left:auto;flex:none}
+.exrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:760px}
+.ex{display:flex;flex-direction:column;gap:2px;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:8px 12px;font-size:12.5px;color:var(--ink2);line-height:1.3;cursor:pointer;min-width:0}
+.ex b{font-size:13.5px;color:var(--ink);font-weight:600}
+.ex span{overflow-wrap:anywhere}
+.ex:hover{border-color:var(--ink3)}
+.ex[aria-pressed=true]{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.ex[aria-pressed=true] b{color:var(--green)}
+@media (max-width:700px){
+  .exrow{display:flex;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:16px;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}
+  .exrow::-webkit-scrollbar{display:none}
+  .ex{flex:0 0 220px;scroll-snap-align:start}
+}
+.dd .osearch{color:var(--green);font-weight:500}
+/* R9 carry: the Home Screen app with no plan of its own (ui/carry.js) */
+.carry-note{margin:12px 16px 0;padding:10px 14px;border-radius:var(--r);background:var(--amber-soft);color:var(--warn-ink);font-size:14px}
+/* a short desktop window: the whole left column scrolls as one, so the stop list isn't a 1–2 row box under the
+   header; last in the file so it wins over the base rules */
+@media (min-width:901px) and (max-height:960px){
+  .rcol{overflow:auto}
+  /* judge pass 4 (13): the day tabs stay at the top while the column scrolls under them */
+  .daytabs{position:sticky;top:var(--sat);z-index:4;background:var(--paper);padding-bottom:10px;border-bottom:1px solid var(--line)}
+  #p-body{flex:none;min-height:auto}
+  .stops{overflow:visible;flex:none}
+}
+#f-clear[inert]{visibility:hidden} /* judge pass 6 (#4): nothing to clear on an empty form; Jard 10-23: its space is kept, so filling the form moves nothing */
+.pcity{position:relative;margin-top:8px}
+#settings h3+.xlist{margin-bottom:14px}
+#export .set-export h3{font-size:15px;margin:4px 0 0}
+/* a phone: Start my day, the Why button and Menu on one row (the Agent is the round button bottom-right) */
+@media (max-width:440px){
+  .mapwrap .tools{gap:4px}
+  .route .mapwrap .tools .btn.sm{padding:8px 10px;font-size:12.5px} /* over agent.css (loaded later) */
+}
+/* The app shell (Jard 10-23 19:00, #5–#8). A wide screen: the plan's tools sit in the app's header, right (Start my
+   day, the Why button, Agent, Menu), and the header's brand line stops short of them (ui/plan.js sets --tools-w).
+   A narrow one: the row under the map, Menu at its end, and the Agent a round button bottom-right that never covers
+   the end of the page (the list and the footer end clear of it). */
+.tools .menu-btn{display:inline-flex;align-items:center;gap:6px}
+.menu-pop{padding:6px;width:min(320px,calc(100% - 48px))}
+.menu-pop .mi{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:inherit;text-decoration:none;cursor:pointer}
+.menu-pop .mi:hover,.menu-pop .mi:focus-visible{background:var(--line2)}
+.menu-pop .mi b{display:block;font-size:15px}
+.menu-pop .mi span{display:block;font-size:13px;color:var(--ink3);margin-top:2px}
+.menu-pop .mi[hidden]{display:none} /* round 8: Add to Home Screen is for an iPhone or iPad in a browser tab (ui/carry.js status) */
+.hs-steps{margin:0 0 12px;padding-left:22px;color:var(--ink2)}
+.hs-steps li{margin:0 0 6px}
+@media (min-width:901px){
+  .app:has(.route .tools) .appbar{padding-right:calc(var(--tools-w,480px) + 40px)}
+  .route .mapwrap .tools{position:fixed;top:calc(var(--sat) + (var(--appbar) - 36px) / 2);right:24px;left:auto;z-index:25;flex-wrap:nowrap}
+  .route .mapwrap .tools .btn{box-shadow:none;border:1px solid var(--line)}
+  .route .mapwrap .tools .btn.ask,.route .mapwrap .tools .btn.drive-start{border-color:transparent}
+  .route .mapwrap .drawer{top:12px}
+}
+@media (max-width:900px){
+  .route .mapwrap .tools .menu-btn{margin-left:auto}
+  /* round 8 (Jard 10-28, his iPhone): the Agent is a round button floating over the app's own content, as a phone's
+     FAB: no bar of its own at the screen's bottom (ease audit 2 pass-1 #12 had one; it read as a strip cut off from the
+     app). The list ends --fab-inset above the page's end, so its last row and the footer scroll clear of the button */
+  .app:has(.route .tools){--fab-inset:calc(80px + env(safe-area-inset-bottom))}
+  .route .rcol{padding-bottom:16px}
+  .app:has(.route .tools) .appfoot{padding-bottom:var(--fab-inset)}
+}
+@media (max-width:700px){
+  .app:has(.route .tools) .toast{bottom:calc(var(--fab-inset) + 8px)}
+  /* a stop's bottom sheet has its own Agent button in its header (asks about that door): one Agent per screen */
+  .app:has(.stopview:not([hidden])) .route .mapwrap .btn.ask{display:none}
+  /* intuit pass 2 #6: the Menu, Settings, Export and Your plans sheets have the screen, as a door does: at 320 the
+     Agent button sat over the Menu's right edge */
+  .app:has(:is(#menu,#settings,#export,#plans):not([hidden])) .route .mapwrap .btn.ask{display:none}
+}
+/* PARITY S14: Settings → Navigation app, the three choices */
+#settings .set-nav{flex-wrap:wrap}
+.set-navapps{display:flex;flex-wrap:wrap;gap:6px}
+.set-navapps [aria-pressed="true"]{border-color:var(--green);color:var(--green);font-weight:700}
+/* audit 2 #5: a phone width shows a stop on the first screen: a shorter map, the day tabs in one sideways row (the edge
+   fades while more sits past it), a tighter day header. Last in the file so it wins over the 900 px rules */
+@media (max-width:700px){
+  .route{--map-h:clamp(170px,28vh,300px)}
+  .mapwrap{min-height:0}
+  .mapwrap .m{height:var(--map-h)}
+  .mapwrap .runbar{top:calc(var(--map-h) - 56px)}
+  .daytabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:10px 28px 2px 12px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .daytabs::-webkit-scrollbar{display:none}
+  .daytabs button{flex:none}
+  .daytabs .wk{margin-left:0}
+  .rhead{padding:10px 16px}
+  .rhead h2{font-size:20px}
+  .rhead .meta{font-size:13px;margin-top:2px}
+  .prog{margin-top:8px}
+}
+/* intuit audit 1b #4: at a phone width "Your list · 55" and "All days" sat off-screen right of the day tabs (2 of the
+   plan's 5 views). The days scroll in a row of their own (snap, a fade where more sits past the edge) and Your list /
+   All days take the row under it, always in view. Wider, .dtdays is display:contents: the one row as before */
+.dtdays{display:contents}
+@media (max-width:700px){
+  .daytabs{flex-wrap:wrap;overflow:visible;row-gap:6px;padding:10px 16px 2px 12px;-webkit-mask-image:none;mask-image:none}
+  .dtdays{display:flex;position:relative;flex:1 1 100%;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:12px;margin:0 -16px 0 -12px;padding:0 28px 0 12px}
+  .dtdays::-webkit-scrollbar{display:none}
+  .dtdays button{flex:none;scroll-snap-align:start}
+  .dtdays.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+  .dtdays.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+  .dtdays.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent)}
+}
+/* intuit audit 1b #8: the form at 320 px. The brand line between the logo and Watch the tour was crushed to one letter
+   ("N / n"): under 360 px the form hides it (the page's title says "Your profile"). The examples were a 170 px strip
+   beside the hidden Clear button, the first card cut: the fold takes the full width (Clear sits on its summary line),
+   each card ~85% of it, so the next one peeks */
+@media (max-width:360px){.appbar[data-route="new"] .who{display:none}}
+@media (max-width:700px){
+  .examples{position:relative}
+  .exfold{flex:1 1 100%}
+  .exhead{padding-right:128px}
+  .examples #f-clear{position:absolute;right:0;top:0}
+  .ex{flex:0 0 min(260px,85%)}
+}
+/* intuit audit 1b #10: tap targets of at least 44 px at a phone width. The glyphs keep their size and the rows their
+   layout: an invisible hit area around ⋯ (28 px), a row's "Website ↗" (16 px tall), a notice's × and the map card's ×.
+   The tour's (demo.css) are beside its own rules */
+@media (max-width:700px){
+  .more,.stop .wlink,.notice .x,.win .x{position:relative}
+  .more::after,.stop .wlink::after,.notice .x::after,.win .x::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+  .pcard .x{width:44px;height:44px;right:2px;top:2px}
+}
+/* intuit audit 1b (smaller): All days at 320 px broke "Tuesday 1–6 pm · 9 doors · 19.2 mi, estimated" into two ragged
+   columns (the bold day and the rest were two flex items): one line of text that wraps */
+@media (max-width:700px){
+  .dayhead button{display:block;text-align:left;line-height:1.45}
+  .dayhead i{margin-right:8px;vertical-align:-1px}
+}
+/* tour fit (320): the map's "Watch the route" bar (▶, speed, Watch all days) ran to 348 px on a 320 screen, so the
+   page grew sideways and every fixed card (the tour's, docked at the bottom) sat partly off screen. At a phone width it
+   keeps inside the map ("Watch all", the slider shorter), and nothing in the app can widen the page */
+@media (max-width:520px){
+  .mapwrap .runbar{max-width:calc(100% - 24px)}
+  .runbar .long{display:none}
+  .runbar .btn{padding:7px 10px}
+  .runbar input[type=range]{width:64px}
+}
+@media (max-width:700px){.app{overflow-x:clip}}
+/* a phone width (round 8, Jard 10-28): Menu is its icon alone (its aria-label says Menu), so the row stays one line
+   above the map; the button keeps a 44 px hit area */
+@media (max-width:700px){
+  .route .mapwrap .tools .menu-btn .lbl{display:none}
+  .route .mapwrap .tools .menu-btn{position:relative;gap:0;padding-left:10px;padding-right:10px}
+  .route .mapwrap .tools .menu-btn::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+}
+/* the Doors icon set (Jard 10-24 #1; public/lib/icons.js): inline SVG in the text colour. .l = before a word, .nar = only in
+   the demo banner's narrow row */
+.ic{display:inline-block;vertical-align:-.2em;flex:none}
+.ic.l{margin-right:.4em}
+.ic.nar{display:none}
+.amic,.asay,.more,.grip,.dv-x{display:inline-grid;place-items:center}
+.dact i .ic,.drow i .ic{display:block}
+/* round 4 #6 (Jard 10-27): Settings lists every setup field with what it holds; a saved form's change is tried on the
+   plan first (the tray at the top of the list), applied with Undo or dropped; a form opened from Settings marks its field */
+#settings .set-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+/* round 8 (Jard 10-28): one summary per part, one Edit each (the set-head's button) */
+#settings .set-sum{list-style:none;margin:6px 0 14px;padding:0}
+#settings .set-sum li{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:2px 12px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px;line-height:1.4}
+#settings .set-sum li b{font-weight:600}
+#settings .set-sum li span{color:var(--ink2);overflow-wrap:anywhere}
+/* round 8: a brand or city form's ← Back at the top left; "Discard changes?" beside it when something changed */
+.pform .fback-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.pform .fback{font-size:14px;cursor:pointer}
+.pform .fback-ask{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+#settings .set-head h4{font-size:15px;margin:0}
+#settings .set-head+p{margin:2px 0 0}
+#settings .xlist li .small{overflow-wrap:anywhere}
+.pending:empty,.pending[hidden]{display:none}
+.pending{margin:10px 20px 0;background:var(--green-soft);border-radius:12px;padding:12px 14px;font-size:13.5px}
+.pending .pend-h{margin-bottom:6px}
+.pending .pend-list{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:3px}
+.pending .pend-list li{overflow-wrap:anywhere}
+.pending .pend-what{color:var(--ink2);margin-bottom:10px}
+.pending .pend-acts{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:700px){.pending{margin:10px 12px 0}}
+.pform .here{outline:2px solid var(--green);outline-offset:6px;border-radius:10px;animation:here-fade 2.6s ease-out forwards}
+@keyframes here-fade{0%,60%{outline-color:var(--green)}100%{outline-color:transparent}}
+/* round 5 #2b (Jard 10-27): the Neighbourhoods toggle on the plan map: the city coloured by who goes out in each part
+   of town (the Why drawer's picture 2) on any tab, its legend beside it; hidden while the Why drawer paints its own */
+.hoodkey{position:absolute;left:24px;top:12px;z-index:5;display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;max-width:calc(100% - 48px);pointer-events:none}
+.hoodkey>*{pointer-events:auto}
+.hoodbtn{border:1px solid var(--line);background:rgba(255,255,255,.86);border-radius:99px;box-shadow:none;padding:6px 13px 6px 10px;font:inherit;font-size:13px;display:inline-flex;gap:7px;align-items:center;color:var(--ink2);cursor:pointer}
+.hoodbtn i{width:10px;height:10px;border-radius:50%;display:inline-block;background:conic-gradient(#8B5CF6 0 25%,#1F7F58 0 50%,#CF6612 0 75%,#3E6FB0 0);opacity:.55}
+.hoodbtn[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:var(--shadow);border-color:var(--ink);font-weight:600}
+.hoodbtn[aria-pressed=true] i{opacity:1}
+.hoodbtn .lbl{display:inline-block}.hoodbtn .lbl::after{content:attr(data-l);display:block;font-weight:600;height:0;overflow:hidden;visibility:hidden} /* round 8: the pill keeps its bold width off too, so a toggle moves nothing */
+.othersbtn i{background:var(--ink3);opacity:.35;box-shadow:0 0 0 1.5px var(--ink3)} /* round 8: the faded other days, as a faint dot */
+.othersbtn[aria-pressed=true] i{opacity:.5}
+.othersbtn[aria-pressed=false]{color:var(--ink3)}
+.othersbtn[aria-pressed=false] i{background:transparent;opacity:.6}
+/* round 8 (Jard 10-28: "a little semi transparent doors logo with a caret that we can collapse these options into"):
+   one small see-through button (the Doors door, as in the app bar's logo, with a caret) holds the toggles; the panel
+   hangs under it. A 44 px hit area around the 36 px button. A dot on the button while Neighbourhoods is on. */
+.layersbtn{position:relative;width:52px;height:36px;padding:0 0 0 2px;border:1px solid rgba(23,25,27,.18);border-radius:10px;background:rgba(255,255,255,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--ink);cursor:pointer;font:inherit}
+.layersbtn::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+.layersbtn .dlogo{width:13px;height:17px;border:2.5px solid var(--ink);border-radius:6.5px 6.5px 2px 2px;position:relative;display:inline-block;opacity:.8}
+.layersbtn .dlogo::after{content:"";position:absolute;right:2px;top:6px;width:2.5px;height:2.5px;border-radius:50%;background:var(--ink)}
+.layersbtn .caret{width:0;height:0;border-left:4.5px solid transparent;border-right:4.5px solid transparent;border-top:5px solid var(--ink);opacity:.7;transition:transform .15s}
+.layersbtn[aria-expanded=true]{background:var(--paper);box-shadow:var(--shadow);border-color:var(--ink)}
+.layersbtn[aria-expanded=true] .dlogo,.layersbtn[aria-expanded=true] .caret{opacity:1}
+.layersbtn[aria-expanded=true] .caret{transform:rotate(180deg)}
+.layersbtn[data-on=true]::before{content:"";position:absolute;right:-3px;top:-3px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid #fff}
+.layers{position:absolute;left:0;top:calc(100% + 6px);display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);white-space:nowrap}
+.layers .hoodbtn{justify-content:flex-start}
+/* runbarfix (doors-video 10-28): the guided demo's Watch-the-route bar (css/animate.css .runbar, left 24 px, top 20 px)
+   sat over this button at desktop widths, so it could be tapped only in full screen. The bar starts past the button
+   (24 + 52 + 8 px) above 900 px; below that it already sits at the map's foot, clear of it. Nothing else moves. */
+@media (min-width:901px){.mapwrap .runbar{left:84px}}
+.hoodleg{display:inline-flex;flex-wrap:wrap;gap:4px 6px}
+.hoodleg span{background:var(--paper);border-radius:99px;box-shadow:var(--shadow);padding:5px 11px;font-size:12.5px;display:inline-flex;gap:7px;align-items:center;color:var(--ink2)}
+.hoodleg i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.route.why-mode .hoodkey{display:none}
+@media (max-width:900px){.hoodkey{left:12px;top:12px;max-width:calc(100% - 24px)}.hoodleg{display:none}} /* a 300 px map: the pills name each area's group; a legend would cover them */
+
+/* round 6 #4 (Jard 10-27: "an agent button similar to how we have it in the mobile app. i don't like that it's a
+   button at the top"): the Agent is a round green button at the screen's bottom right at every width, like the
+   phone's (app-mobile/src/components/AskFab.tsx: 56 pt, the agent icon at 28, a shadow), and is not in the top bar.
+   It hides while its panel is open, in drive mode (which has its own) and under a phone's sheets (the rules above).
+   On a wide screen the map's zoom buttons and the attribution sit left of it, so it covers neither. */
+.route .mapwrap .btn.ask{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));left:auto;top:auto;z-index:45;width:56px;height:56px;min-width:0;padding:0;margin:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--green);color:var(--green-ink);box-shadow:0 4px 10px rgba(0,0,0,.25);cursor:pointer}
+.route .mapwrap .btn.ask svg{display:block;width:28px;height:28px;flex:none}
+.route .mapwrap .btn.ask .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.route .mapwrap .btn.ask:hover,.route .mapwrap .btn.ask:focus-visible{background:#3A6F5E}
+html.agent-open .route .mapwrap .btn.ask,html.driving .route .mapwrap .btn.ask{display:none}
+@media (min-width:901px){.route .mapwrap .maplibregl-ctrl-bottom-right{right:64px}}
+/* round 8 (Jard 10-28: "a full screen map button for all versions", map.js fullControl): the map's box filling the
+   screen, by the Fullscreen API or MapLibre's pseudo-fullscreen class on an iPhone. The controls and the layer menu
+   keep clear of the notch and the home bar; an Exit full screen button sits top-right. */
+.m.mapfull{background:var(--bg)}
+.m.mapfull .maplibregl-ctrl-bottom-right{right:env(safe-area-inset-right,0px)!important;bottom:env(safe-area-inset-bottom,0px)}
+.m.mapfull .maplibregl-ctrl-bottom-left{left:env(safe-area-inset-left,0px);bottom:env(safe-area-inset-bottom,0px)}
+.m.mapfull .hoodkey{top:calc(12px + var(--sat));left:calc(12px + env(safe-area-inset-left,0px))}
+.mapfull-exit{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));top:calc(12px + var(--sat));z-index:6}
+.mapfull-exit .btn{background:var(--paper);color:var(--ink);box-shadow:var(--shadow);border:1px solid var(--line)}
+@media (max-width:900px){.route .mapwrap .btn.ask{bottom:calc(12px + env(safe-area-inset-bottom))}}
+/* round 8 (Jard 10-28, his iPhone): at a narrow width the plan's buttons (Start my day, Market, My doors, Menu) sit
+   ABOVE the map, under the app's header, and what the Menu opens (the menu, Settings, Export) opens right under them.
+   The map block is a grid: row 1 the buttons, rows 2–4 the Menu's sheets (0 tall while hidden), row 5 the map. Each
+   overlay of the map (the legend, Neighbourhoods, Watch the route, the building pill…) is placed in the map's row, so
+   its top/left/bottom count from the map's edges as before (an absolutely positioned child of a grid container takes
+   its grid area as its containing block). Last in the file so it wins over the 900 px rules above */
+@media (max-width:900px){
+  .mapwrap{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:auto}
+  .mapwrap>.tools{grid-row:1;align-items:center}
+  .mapwrap>#menu{grid-row:2;justify-self:end} /* hangs from the Menu button at the row's end */
+  .mapwrap>#settings{grid-row:3}
+  .mapwrap>#export{grid-row:4}
+  .mapwrap>.m,.mapwrap>.weeklegend,.mapwrap>.hoodkey,.mapwrap>.mapnote,.mapwrap>.legend,.mapwrap>.maptip,.mapwrap>.toast,.mapwrap>.runbar,.mapwrap>.bpill,.mapwrap>.bmiles,.mapwrap>.bcap,.mapwrap>.roomview{grid-row:5;grid-column:1}
+  /* what flows under the map (the map card, the tour's route credit) is placed there by name: a hidden sheet leaves
+     its row empty, and an unplaced child would fill that gap above the map */
+  .mapwrap>.pcard{grid-row:6}
+  .mapwrap>.rattr{grid-row:7}
+  .mapwrap>.drawer{margin-top:0}
+}

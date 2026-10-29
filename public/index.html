@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><!-- round 8 (Jard 10-28 19:53, Brave iOS): the logo sat under the status bar; cover + --sat (css/doors.css) pad every top bar by env(safe-area-inset-top) -->
+<script>
+// round 8 (Jard 10-28 20:18, Brave iOS): a refresh opened the landing ~70 pt down, the logo under the status bar. The
+// browser restores the last scroll position on a reload; a reload now starts at the top (a /#how reload on its
+// section). Restoration is off for the reloaded page's life and on again when it is left, so back/forward keep the
+// browser's own. GUARD: Chromium decides the restore when the reload commits (before this runs) and restores again
+// as late layout lands, so the page also undoes any scroll in its first 3 s that the person didn't make; the app
+// skips that (its router resets the scroll itself and the tour scrolls on its own). scripts/r8scroll-cdp.mjs measures it.
+(function () {
+  var GUARD = true;
+  var nav = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+  var reload = nav ? nav.type === "reload" : !!(performance.navigation && performance.navigation.type === 1);
+  if (!reload) return;
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+    addEventListener("pagehide", function () { history.scrollRestoration = "auto"; });
+  }
+  var touched = false;
+  var stop = function () { touched = true; };
+  ["pointerdown", "touchstart", "wheel", "keydown"].forEach(function (t) { addEventListener(t, stop, { passive: true, capture: true }); });
+  var top = function () {
+    if (touched) return;
+    var h = null;
+    try { h = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (h) h.scrollIntoView(); else if (!location.hash) scrollTo(0, 0);
+  };
+  addEventListener("load", function () {
+    top();
+    if (!GUARD) return;
+    addEventListener("scroll", top);
+    setTimeout(function () { removeEventListener("scroll", top); }, 3000);
+  });
+})();
+</script>
+<title>Doors · sales routes for drink brands entering a new city</title>
+<meta name="description" content="For drink brands and distributor reps entering a new city. Doors ranks every bar and restaurant by how well its regulars match your drinkers, plans your sales days as driving routes with a pitch for every stop, and re-plans as you log visits. Built on Qloo's taste data.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32"><!-- Jard 10-23 #10: the tab took the 192 px icon shrunk to 16 px, a green square; the door mark at tab size -->
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#F7F6F2">
+<!-- link previews (polish2): the Worker serves this page with __ORIGIN__ as the request's own origin (src/worker.js handlePage); public/og.png comes from scripts/og-image.mjs -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Doors">
+<meta property="og:url" content="__ORIGIN__/">
+<meta property="og:title" content="Doors · sales routes for drink brands entering a new city">
+<meta property="og:description" content="Doors ranks every bar and restaurant in a new city by how well its regulars match your drinkers, on Qloo's taste data, then plans your sales days as driving routes with a pitch for every door.">
+<meta property="og:image" content="__ORIGIN__/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Doors: Plan your sales days in a new city. Beside it, a day's driving route of ten numbered stops across Austin.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Doors · sales routes for drink brands entering a new city">
+<meta name="twitter:description" content="Doors ranks every bar and restaurant in a new city by how well its regulars match your drinkers, on Qloo's taste data, then plans your sales days as driving routes with a pitch for every door.">
+<meta name="twitter:image" content="__ORIGIN__/og.png">
+<meta name="twitter:image:alt" content="Doors: a day's driving route of ten numbered stops across Austin.">
+<link href="/vendor/fonts/fonts.css" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/maplibre-gl-5.24.0/maplibre-gl.css">
+<link rel="stylesheet" href="/css/doors.css">
+<script defer src="/vendor/maplibre-gl-5.24.0/maplibre-gl.js"></script>
+<script type="module" src="/ui/landing.js"></script>
+</head>
+<body>
+<div class="lp">
+  <header class="nav">
+    <a class="logo" href="/?home=1"><i></i>Doors</a>
+    <nav class="links" aria-label="Sections"><a href="#how">How it works</a><a href="#brands">For brands</a><a href="#reps">For distributor reps</a></nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">For drink brands and distributor reps</div>
+        <h1>Plan your sales days in a new city.</h1>
+        <p class="lede">Doors ranks every bar and restaurant by how well its regulars match your drinkers and finds an insight for each one: what it's missing, what the bars around it already carry, and the angle to lead with. It plans your sales days as driving routes with talking points for every stop. Log how each visit went and the days ahead re-plan; ask Doors Agent why it picked a door.</p>
+        <div class="cta"><a class="btn primary" href="/app#/demo">Watch the tour &nbsp;→</a><a class="btn ghost" href="/app#/new">Start my profile</a></div>
+        <div class="who">For anyone selling a drink brand into bars and restaurants. Rankings from Qloo's taste data.</div>
+      </div>
+      <div class="hero-card" aria-label="An example day: Athletic Brewing drinkers in Austin">
+        <div class="m" id="hero-map"></div>
+        <div class="hcap" id="hero-cap" hidden></div>
+      </div>
+    </section>
+
+    <section class="steps3" id="how" aria-label="How it works">
+      <div><b>1 · Tell it about your brand</b><span>What you make, who drinks it, where you're opening and where your day starts.</span></div>
+      <div><b>2 · Doors picks the doors and plans the route</b><span>Qloo's taste data ranks every bar and restaurant in the city for your drinker, and Doors routes the best open ones.</span></div>
+      <div><b>3 · Visit each door</b><span>Open a stop, read why it's on your list and the drafted message, go in, log the visit.</span></div>
+      <div><b>4 · Log visits and re-plan</b><span>Ask Doors Agent why a door is where it is, with sources. Say how a visit went from the car, and the follow-up and the rest of the week re-plan.</span></div>
+    </section>
+
+    <section class="lsec" id="brands">
+      <h2>Who it's for</h2>
+      <div class="two">
+        <div class="card"><h3>For brands</h3>
+          <p>Doors starts from the brands your drinker already buys and finds the doors where people like them are regulars.</p>
+          <ul><li>A plan for each day you're in town, open doors only</li><li>Why each door is on the list, from Qloo's profile of the door</li><li>A drafted message and talking points for every door</li></ul></div>
+        <div class="card" id="reps"><h3>For distributor reps</h3>
+          <p>A new SKU in your book and a week to get placements. Doors gives you the doors whose crowd fits it, grouped by area and in route order from your first stop.</p>
+          <ul><li>Day routes built around the hours you have</li><li>Log an outcome at each door; doors you miss move to a later day</li><li>Export the plan for your manager or your CRM</li></ul></div>
+      </div>
+    </section>
+
+
+    <p class="tagline">The doors whose regulars drink like yours, whether or not they pour you yet.<span>Not a distribution check: Qloo doesn't know what a door stocks.</span></p>
+  </main>
+
+  <footer class="lfoot">
+    <span>Bar and restaurant rankings and listings from <a href="https://www.qloo.com" target="_blank" rel="noopener">Qloo</a>'s taste data.</span>
+    <span>Maps: OpenFreeMap, OpenMapTiles, OpenStreetMap contributors.</span>
+    <span><a href="/privacy">Privacy</a></span>
+    <span class="r">Built for the Qloo Agentic Hackathon</span>
+  </footer>
+</div>
+<!-- preload:begin (scripts/preload.mjs writes this block) -->
+<script>
+(function (add) {
+  ["/lib/schedule.js", "/lib/core.js", "/lib/profile.js", "/lib/talk.js", "/lib/culture.js", "/lib/ask.js", "/lib/week.js", "/lib/pool.js", "/lib/follow.js", "/ui/dom.js", "/ui/data.js", "/lib/live.js", "/lib/place.js", "/lib/stopmodel.js", "/lib/talk-model.js", "/lib/talk-gen.js", "/lib/note.js", "/lib/outcome.js", "/lib/agent-tools.js", "/lib/visit-parse.js", "/lib/slots.js", "/lib/door-notes.js", "/lib/day-debrief.js", "/lib/fu-check.js", "/lib/drive-day.js", "/lib/whyviz/lift.js", "/lib/insights.js", "/lib/roominsight.js", "/lib/planview.js", "/ui/map.js", "/lib/icons.js", "/ui/animate.js", "/ui/corridor.js", "/lib/corridor.js", "/lib/demo-profile.js", "/lib/store.js", "/lib/plans.js", "/lib/router.js", "/lib/demo-plan.js", "/lib/travel.js"].forEach(function (h) { add({ rel: "modulepreload", href: h }); });
+  ["/data/index.json", "/data/routes/athletic-brewing-austin.json", "/data/demo/demo.json"].forEach(function (h) { add({ rel: "preload", as: "fetch", href: h, crossOrigin: "anonymous" }); });
+})(function (o) { document.head.appendChild(Object.assign(document.createElement("link"), o)); });
+</script>
+<!-- preload:end -->
+</body>
+</html>

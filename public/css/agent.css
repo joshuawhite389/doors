@@ -1,0 +1,115 @@
+/* R9 chat agent · the Ask Doors panel (ui/agent.js). Desktop: a card over the map's right edge; phone: the whole screen (round 8). */
+.agentpanel{position:fixed;right:16px;bottom:16px;width:380px;max-width:calc(100vw - 32px);height:min(620px,calc(100vh - var(--appbar) - 32px));z-index:60;display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow),0 12px 40px rgba(20,20,20,.14)}
+.agentpanel[hidden]{display:none}
+.ahead{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line2);flex:none}
+.ahead b{font:700 15px "Inter Tight",Inter,sans-serif}
+.amodel{font-size:11.5px;color:var(--ink3);background:var(--seg);border-radius:99px;padding:1px 8px}
+.amodel:empty{display:none}
+.aclose{margin-left:auto;border:0;background:transparent;font-size:22px;line-height:1;width:32px;height:32px;border-radius:50%;color:var(--ink2);display:inline-grid;place-items:center;padding:0;cursor:pointer} /* round 7: the × is the icon set's, centred in a true circle */
+.aclose:hover{background:var(--bg)}
+.alog{flex:1;min-height:0;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.aempty{color:var(--ink2);font-size:15px;line-height:1.45;font-weight:500} /* the greeting: "Hi Jard, how can I help?" */
+.astart{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:10px} /* ease #12: the three starter asks */
+.astart .btn{text-align:left;white-space:normal}
+.agent-msg{font-size:14px;line-height:1.45;max-width:92%;overflow-wrap:anywhere}
+.agent-msg[data-role="user"]{align-self:flex-end;background:var(--green);color:var(--green-ink);border-radius:14px 14px 4px 14px;padding:8px 12px}
+.agent-msg[data-role="agent"]{align-self:flex-start;background:var(--bg);border-radius:14px 14px 14px 4px;padding:9px 12px}
+.agent-msg[data-role="agent"]{white-space:pre-line} /* round 3 (agent2): a per-door answer ("- Growler Express: …" a line each) keeps its lines */
+.athinking{color:var(--ink3);letter-spacing:2px}
+/* Doors Agent (spec §6): the sources smaller and quieter; each fact keeps a small tag (Qloo / route / you / link) */
+.agent-facts{margin-top:6px;font-size:12px;color:var(--ink3)}
+.agent-facts summary{cursor:pointer;color:var(--ink3);font-size:11px}
+.agent-facts ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.agent-facts li{line-height:1.4}
+.agent-src{display:inline-block;font-size:10px;line-height:1.5;color:var(--ink3);border:1px solid var(--line);border-radius:99px;padding:0 6px;margin-left:2px;font-weight:500;white-space:nowrap;text-decoration:none;vertical-align:1px}
+a.agent-src{color:var(--green)}
+a.agent-src:hover{text-decoration:underline}
+/* spec §5: a chip per change ("Meanwhile moved to Friday · Undo") */
+.agent-did{margin-top:8px;font-size:12.5px;color:var(--done);font-weight:500;display:flex;flex-wrap:wrap;gap:6px}
+.achip{display:inline-flex;align-items:baseline;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:3px 10px;line-height:1.35}
+.achip .lnk{font-size:12.5px;font-weight:600;white-space:nowrap} /* a long chip kept "Undo" one letter a line */
+/* ability 4: a follow-up draft, opened in the rep's own mail or text app */
+.agent-draft{margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.adraft-s{font-weight:600;font-size:12.5px;margin-bottom:4px}
+.adraft-b{white-space:pre-wrap;font-size:13px;color:var(--ink2)}
+.adraft-open{display:inline-block;margin-top:6px;font-weight:600}
+.achip[data-undone]{color:var(--ink3);text-decoration:line-through;text-decoration-thickness:1px}
+/* the speaker: away from drive mode, a reply is read aloud only on this tap */
+.asay{float:right;margin:-4px -6px 0 6px;border:0;background:transparent;font-size:14px;line-height:1;width:32px;height:32px;border-radius:50%;cursor:pointer;opacity:.6;color:var(--green)}
+.asay:hover,.asay:focus-visible{opacity:1;background:var(--paper)}
+.arest{margin-top:6px;font-size:11.5px;color:var(--warn-ink)}
+.aform{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--line2);flex:none}
+.aform textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;min-height:64px;max-height:120px;overflow-y:hidden} /* one row that grows with its text (ui/agent.js grow) */
+.asend .ic{display:none} /* wide: Send is a word; the phone shows the arrow */
+.aform textarea:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+.agentpanel[data-state="thinking"] [data-agent="send"]{opacity:.5;pointer-events:none}
+/* talk (PARITY M3): the mic left of Send; amber and pulsing while it listens, as the phone's */
+.amic{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--green);background:var(--paper);color:var(--green);font-size:17px;line-height:1;cursor:pointer}
+.amic.on{background:var(--warn,#C77A1A);border-color:transparent;color:#fff;animation:amic-pulse 1.4s ease-in-out infinite}
+.amic:disabled{opacity:.6;cursor:default}
+.amic[hidden]{display:none}
+@keyframes amic-pulse{50%{box-shadow:0 0 0 6px rgba(199,122,26,.25)}}
+@media (prefers-reduced-motion:reduce){.amic.on{animation:none}}
+.aerr{margin:0;padding:0 14px 8px;font-size:12.5px;color:var(--warn-ink)}
+.aerr[hidden]{display:none}
+.afoot{margin:0;padding:0 14px 10px;font-size:11px;color:var(--ink3);flex:none}
+.afoot a{color:var(--ink2)}
+/* round 8 (Jard 10-28, his iPhone shots: "on the phone in general, when you pull up the agent, it should just be the
+   whole screen. The phone is too small to have a half screen to chat with an agent"). A phone width: the Agent takes
+   the WHOLE screen, everywhere it opens (the plan's Ask, a door's Ask about this door, drive mode's Agent and Type
+   instead): the app bar, the map, the door and drive mode's hands-free bar are all under it. A top bar with its name and
+   a 44 px × (under the status bar: env(safe-area-inset-top)), the thread, then a one-line box that grows (to 4 lines),
+   the mic and a round Send. Kept from round 7: the panel follows the visual viewport (ui/agent.js sets --kb, the
+   keyboard's height, --vvt, the visible top): with the keyboard up the box sits just above it and the × stays in view;
+   the page under it is locked (html.agent-lock). Back (the phone's swipe) and Escape close it (ui/agent.js). No Privacy
+   line here (the Menu's Privacy and privacy.html say it); the model notice still shows when there is one. Wide (the
+   web app on a computer) is as it was: a card over the map's right edge. */
+@media (max-width:700px){
+  .agentpanel{left:0;right:0;top:var(--vvt,0px);bottom:var(--kb,0px);width:auto;max-width:none;height:auto;max-height:none;min-height:0;border-radius:0;border:0;box-shadow:none;z-index:60}
+  .ahead{padding:calc(8px + env(safe-area-inset-top)) 8px 8px 18px;border-bottom:1px solid var(--line2);gap:8px;min-height:0}
+  .ahead b{font:700 17px/1.2 "Inter Tight",Inter,sans-serif;color:var(--ink)}
+  .amodel{font-size:11px}
+  .aclose{width:44px;height:44px;margin:-4px 0 -4px auto;color:var(--ink2)}
+  .aclose:active{background:var(--line2)}
+  .alog{padding:12px 16px 8px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .aempty{font-size:16px}
+  .aform{padding:6px 10px calc(10px + env(safe-area-inset-bottom)) 14px;border-top:1px solid var(--line2);gap:8px;align-items:flex-end}
+  .aform textarea{min-height:44px;max-height:112px;border-radius:22px;padding:11px 16px;font-size:16px;line-height:1.35} /* 16 px: no zoom on focus (iOS); 44 = one line */
+  .aform textarea::placeholder{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* "Ask, log a visit, or add a note" on one line at 375 */
+  .amic{width:44px;height:44px;font-size:18px}
+  .asend{width:44px;height:44px;min-width:0;padding:0;border-radius:50%;display:inline-grid;place-items:center;flex:none}
+  .asend .ic{display:block}
+  .asend .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .aerr{padding:0 16px 6px}
+  .afoot{display:none;padding:0 16px 6px}
+  .afoot:has(#agentWho:not(:empty)){display:block}
+  .afoot a{display:none}
+  html.agent-lock{overflow:hidden}
+  html.agent-lock body{position:fixed;left:0;right:0;width:100%;overflow:hidden} /* top is set by ui/agent.js (−scrollY) */
+  /* the tour: its banner (Skip, Close tour) stays in view above the panel (ui/agent.js sets --atop), and the panel steps
+     back from the tour's docked card (ui/coach.js sets --coach-t / --coach-b), so the thread and its box never sit under it */
+  html.in-demo .agentpanel{top:calc(var(--vvt,0px) + max(var(--atop,0px),var(--coach-t,0px)));bottom:calc(var(--kb,0px) + var(--coach-b,0px))}
+  /* drive mode: the whole screen too, over the hands-free bar (css/drive.css docks the card above it when wide); the bar
+     is back, muted, when the panel closes (ui/handsfree.js: Type instead mutes it first) */
+  html.hf-open.driving .agentpanel.agentpanel{bottom:var(--kb,0px);height:auto;max-height:none} /* css/drive.css loads after this file: the doubled class outranks its docked card */
+  html.driving.agent-open .hf{display:none}
+}
+/* the plan's toast (Undo) stays clear of the open panel (wide); at a phone width the panel covers the screen and the
+   reply's own chip carries the Undo (one Undo on screen) */
+@media (min-width:701px){html.agent-open .mapwrap .toast{left:calc((100% - 400px) / 2)}}
+/* Ask Doors (Jard 2026-10-23: one per screen): the plan toolbar's, green and first, with the chat icon */
+.tools .btn.ask{background:var(--green);color:var(--green-ink);gap:6px}
+.tools .btn.ask svg{flex:none}
+/* its icon's room: the six tools still fit one row beside the map at 1400 px (656 px for them) */
+.mapwrap .tools{gap:6px}
+.mapwrap .tools .btn.sm{padding:8px 13px}
+html.driving .agentpanel{z-index:1001} /* drive mode's Ask opens over it */
+/* ease audit 2 (pass-1 #12): in drive mode the panel is dark like the screen under it (css/drive.css's colours) */
+html.driving .agentpanel{
+  --bg:#202B27; --paper:#18211E; --ink:#F3F1EC; --ink2:#B9C2BE; --ink3:#9AA5A0; --line:#2B3833; --line2:#24302B;
+  --green:#3C8D5A; --green-ink:#fff; --green-soft:#24402F; --seg:#24302B; --done:#8FD3A8; --warn-ink:#FFC48F;
+  color:var(--ink);color-scheme:dark;box-shadow:0 12px 40px rgba(0,0,0,.5)
+}
+html.driving .agentpanel .btn.line{color:#CFEFDB}
+html.driving .agentpanel .aform textarea{background:var(--bg);color:var(--ink)}
+html.driving .agentpanel a{color:#8FD3A8}

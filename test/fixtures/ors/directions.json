@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "bbox": [-97.761391, 30.215381, -97.742367, 30.224437],
+  "features": [
+    {
+      "bbox": [-97.761391, 30.215381, -97.742367, 30.224437],
+      "type": "Feature",
+      "properties": {
+        "segments": [
+          { "distance": 1215.4, "duration": 182.6 },
+          { "distance": 2398.9, "duration": 301.2 }
+        ],
+        "way_points": [0, 4, 9],
+        "summary": { "distance": 3614.3, "duration": 483.8 }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-97.760568, 30.224437], [-97.761012, 30.222905], [-97.761455, 30.220781], [-97.761802, 30.218644],
+          [-97.761391, 30.217154], [-97.758204, 30.216902], [-97.753318, 30.216511], [-97.748102, 30.216093],
+          [-97.744915, 30.215702], [-97.742367, 30.215381]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "attribution": "openrouteservice.org | OpenStreetMap contributors",
+    "service": "routing",
+    "query": { "coordinates": [[-97.760568, 30.224437], [-97.761391, 30.217154], [-97.742367, 30.215381]], "profile": "driving-car", "format": "geojson" }
+  }
+}

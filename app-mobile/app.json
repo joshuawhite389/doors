@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Doors",
+    "slug": "doors",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.joshuawhite.doors",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Doors talks to your Doors server on this Wi-Fi network to plan your day.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsLocalNetworking": true
+        },
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "comgooglemaps",
+          "waze"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Doors listens only while you tap its mic, so you can say how a visit went or ask the Agent. The clip goes to Doors' server to become words and isn't kept.",
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false,
+          "recordAudioAndroid": false
+        }
+      ]
+    ]
+  }
+}

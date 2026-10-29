@@ -1,0 +1,62 @@
+{
+  "v": 1,
+  "checked": "2026-10-08",
+  "note": "Fixed list for talking points (SPEC-V2 §7). Each text was checked against its source page on the date above; numbers are as the source reports them. appliesTo: \"na\" = non-alcoholic brands only, \"all\" = any brand. category (optional) narrows a fact to a product category.",
+  "dropped": [
+    { "claim": "80% of Athletic Brewing drinkers also drink alcohol", "why": "not on the Food Dive or Marketing Dive pages cited in the research notes" },
+    { "claim": "Nonalcoholic drinks are 5–8% of a venue's sales", "why": "not on the Restaurant Dive page cited in the research notes" },
+    { "claim": "Athletic holds 36% of on-premise craft NA beer", "why": "reworded: the source says 36% of on-premise nonalcoholic beer sales, not craft NA" }
+  ],
+  "facts": [
+    {
+      "id": "na-sales-2024",
+      "text": "Nonalcoholic beverage sales grew 30% in 2024, according to the food purchasing company Entegra.",
+      "source": "Opinion piece by Sidework's CEO, Restaurant Dive, Feb 5 2025 (citing Entegra)",
+      "url": "https://www.restaurantdive.com/news/how-restaurants-can-grow-profits-with-mocktails-nonalcoholic-menus/737866/",
+      "appliesTo": ["na"]
+    },
+    {
+      "id": "na-menu-95k",
+      "text": "Venues doing about $2 million a year saw an average revenue boost of $95,000 after expanding their nonalcoholic drink menus (Entegra).",
+      "source": "Opinion piece by Sidework's CEO, Restaurant Dive, Feb 5 2025 (citing Entegra)",
+      "url": "https://www.restaurantdive.com/news/how-restaurants-can-grow-profits-with-mocktails-nonalcoholic-menus/737866/",
+      "appliesTo": ["na"]
+    },
+    {
+      "id": "na-table-time",
+      "text": "Venues report that nonalcoholic options extend table times and increase per-party spend.",
+      "source": "Opinion piece by Sidework's CEO, Restaurant Dive, Feb 5 2025 (vendor anecdote)",
+      "url": "https://www.restaurantdive.com/news/how-restaurants-can-grow-profits-with-mocktails-nonalcoholic-menus/737866/",
+      "appliesTo": ["na"]
+    },
+    {
+      "id": "na-return-39",
+      "text": "39% of consumers say they are more likely to return to a restaurant or bar that offers a wide range of nonalcoholic options (data shared by Athletic Brewing).",
+      "source": "Marketing Dive, Dec 18 2025",
+      "url": "https://www.marketingdive.com/news/athletic-brewing-links-with-opentable-in-latest-bid-to-sober-curious/808191/",
+      "appliesTo": ["na"]
+    },
+    {
+      "id": "na-beer-onprem-36",
+      "text": "Nonalcoholic beer already sells on-premise: Athletic Brewing alone reports a 36% share of on-premise nonalcoholic beer sales in America.",
+      "source": "Marketing Dive, Dec 18 2025 (company figures)",
+      "url": "https://www.marketingdive.com/news/athletic-brewing-links-with-opentable-in-latest-bid-to-sober-curious/808191/",
+      "appliesTo": ["na"],
+      "category": ["beer"]
+    },
+    {
+      "id": "bartender-rec-46",
+      "text": "Nearly half (46%) of consumers globally say they are likely to buy a drink on a bartender's recommendation.",
+      "source": "NIQ Global Bartender Report 2026",
+      "url": "https://nielseniq.com/global/en/insights/analysis/2026/build-stronger-relationships-behind-the-bar-with-the-niqs-global-bartender-report-2026/",
+      "appliesTo": ["all"]
+    },
+    {
+      "id": "bartender-reliability",
+      "text": "Bartenders name reliability and support as two of the three most important things a brand needs to thrive.",
+      "source": "NIQ Global Bartender Report 2026",
+      "url": "https://nielseniq.com/global/en/insights/analysis/2026/build-stronger-relationships-behind-the-bar-with-the-niqs-global-bartender-report-2026/",
+      "appliesTo": ["all"]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+/* G7 "Your plans": the saved brand-city list (on the profile form and in the app bar menu) and the editing note. */
+.myplans{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 24px}
+.myplans>summary{cursor:pointer;font-size:14px}
+.myplans[open]>summary{margin-bottom:10px}
+.plist{list-style:none;margin:0;padding:0}
+.prow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line2)}
+.prow:first-child{border-top:0}
+.prow.cur .popen b{color:var(--green)}
+.prow.ask{background:var(--amber-soft);border-radius:10px;padding:10px 12px;border-top:0;margin:4px 0}
+.popen{flex:1;min-width:0;color:var(--ink);text-decoration:none;font-size:14px}
+.popen:hover b{text-decoration:underline}
+.popen .pcity{color:var(--ink2)}
+.popen small{display:block;color:var(--ink3);font-size:12.5px}
+.ptext{flex:1;font-size:13.5px;color:var(--warn-ink)}
+.pact{display:flex;gap:6px;flex:none}
+.pact .btn.sm{padding:6px 12px}
+.btn.danger{background:#A3361F;color:#fff}
+.pnone{color:var(--ink3);font-size:14px;margin:0}
+.pfoot{margin-top:10px}
+.editnote{background:var(--green-soft);border-radius:12px;padding:10px 14px;font-size:14px;color:var(--ink);margin:10px 0 22px} /* ease audit 3 #4: it sat up under the heading (-12px) */
+.editnote a{color:var(--green);font-weight:600;white-space:nowrap}
+/* app bar menu */
+.pmenu{position:relative}
+.pmenu .pop{position:absolute;right:0;top:calc(100% + 8px);width:min(420px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px;z-index:60}
+.pmenu .pop h3{font-size:14px;margin:0 0 6px}
+@media (max-width:520px){
+  .prow{flex-wrap:wrap;gap:6px}
+  .pact{width:100%}
+  .pmenu{position:static}
+  .pmenu.on-new{display:none} /* the form shows the same list at the top */
+  .pmenu .pop{right:16px;left:16px;width:auto}
+}
+/* ease audit 3 #4: Edit profile's Cancel and Save and re-plan stay on screen in a bar at the bottom of the form (they
+   were only at the end, 2,800 px down at 390), as on the phone */
+.build.sticky{position:sticky;bottom:0;z-index:5;background:var(--bg);border-top:1px solid var(--line);margin:24px -64px -56px;padding:12px 64px calc(12px + env(safe-area-inset-bottom))}
+@media (max-width:900px){.build.sticky{margin:24px -16px -40px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:10px}}
+/* group 3 #4: the product (format chips, size / ABV / price, how you sell) and the ask Doors suggests */
+fieldset.product{border:0;padding:0;margin:0 0 22px;min-width:0}
+fieldset.product>legend{padding:0;margin-bottom:8px}
+.product .lbl.sub{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin:0 0 6px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:600px;margin:14px 0}
+.row3 label.small{display:block;margin-bottom:4px;color:var(--ink2)}
+.check{display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--ink2);cursor:pointer}
+.asksug{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;font-size:14px;color:var(--ink2)}
+.asksug b{color:var(--ink);font-weight:600}
+.parthead{font-size:17px;margin:30px 0 14px;padding-top:18px;border-top:1px solid var(--line)}
+.part[hidden]{display:none}
+.startover{margin-top:28px;padding-top:14px;border-top:1px solid var(--line2);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.startover .ptext{flex:1 1 260px}
+@media (max-width:520px){.row3{grid-template-columns:1fr;gap:10px}}
+
+/* r2 (Jard 10-24): variations, Required marks, the "Still needed" button */
+.product #variants{display:flex;flex-direction:column;gap:14px}
+.product .variant+.variant{border-top:1px solid var(--line);padding-top:14px}
+.product .vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:14px}
+.product .fother{margin-top:8px;max-width:320px}
+.product #add-variant{margin-top:12px}
+.req{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.01em;vertical-align:1px;background:var(--green-soft);color:var(--green)}
+.missing .req{background:var(--amber-soft);color:var(--warn-ink)}
+.build .needgo{background:none;border:0;padding:0;font:inherit;font-size:13px;color:var(--warn-ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}
+.flashreq{animation:flashreq 1.6s ease-out}
+@keyframes flashreq{0%,30%{box-shadow:0 0 0 3px var(--amber);border-radius:12px}100%{box-shadow:0 0 0 3px transparent;border-radius:12px}}
+@media (prefers-reduced-motion:reduce){.flashreq{animation:none;box-shadow:0 0 0 3px var(--amber);border-radius:12px}}
