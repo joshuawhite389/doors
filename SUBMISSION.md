@@ -70,9 +70,9 @@ keeps both judges' rows.
 
 Click **Watch the tour**: a guided tour of the real app in 22 short cards, no sign-up. It asks Doors why its #1-ranked door
 isn't the first stop, shortens an opener, shows that stop's card before and after her visit, logs a visit in drive
-mode and ends on the same brand in Boise. In the tour Doors' rules answer the chat
-and write the spoken note (no live call and no model call, on the web and in the iPhone app; the device's own voice
-reads the note); the live app asks the model first. https://doors.oldjard.workers.dev · Code:
+mode and ends on the same brand in Boise. The tour's plan is baked (no Qloo, routing or plan-building call); on the web
+Doors Agent and the voice are live in it, as in the app: Claude answers the chat, and drive mode's hands-free bar
+listens and speaks (in the iPhone app's tour Doors' rules answer and the device's own voice reads). https://doors.oldjard.workers.dev · Code:
 https://github.com/joshuawhite389/doors (MIT)
 
 **Try it:** on the form, open **Try an example** (a made-up rep for each brand Doors already holds, in a city it
@@ -379,8 +379,8 @@ model call on the web or the iPhone app.
 
 ## Screenshots
 
-`screenshots/v2/`, all from the guided tour and the plan it leaves behind, where Doors' rules answer the chat (no
-model call, no live call): the landing; Tuesday's route; the week's three loops; what to say at the door; the week
+`screenshots/v2/`, all from the guided tour and the plan it leaves behind, shot with no model connected, so Doors'
+rules answer the chat in them: the landing; Tuesday's route; the week's three loops; what to say at the door; the week
 re-planning after a visit; why a
 door is on her list; Doors Agent with its sources open; Your rules in Edit my brand ("Never say near beer"); the same door
 before and after her visit (1400 px); and the landing, a day, a stop, Doors Agent, drive mode's read-back after Log visit and the full-screen map with its

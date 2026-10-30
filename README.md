@@ -51,8 +51,9 @@ Built for the Qloo Agentic Hackathon. MIT licence.
    re-routes from Nomadic and Thursday gains the return visit. Along the way it asks Doors Agent why the #1-ranked door is stop
    6 (the answer's sources open) and to shorten an opener, starts the day in drive mode and logs a visit in words
    ("done, liked it, come back <date> at 3, hesitant about price") read back before it saves, and ends on the same
-   brand in Boise. In the tour Doors' rules answer (no model call, no live call). "Skip to the finished plan" is in the
-   banner.
+   brand in Boise. The tour's plan is baked (no Qloo, routing or plan-building call), but Doors Agent and the voice are
+   live, as in the app: Claude answers the chat, and drive mode's hands-free bar listens and speaks. "Skip to the
+   finished plan" is in the banner.
 2. **Start my profile** on the hand-off opens the form. **Try an example** at the top fills it in one click: a
    made-up rep for each brand Doors already holds (Athletic Brewing, Casamigos, Don Julio, Espolòn, Teremana, Liquid
    Death, LaCroix, White Claw), each in a city it holds (Austin, Chicago, Boise, Omaha). **Build my plan** is instant.
@@ -82,8 +83,8 @@ Built for the Qloo Agentic Hackathon. MIT licence.
 ![The native iPhone app on an iOS simulator, one plan (Tidewell in Austin, Maya Ortiz's example profile, sample data), in the middle of her Tuesday, five of nine doors visited: the day's route; the drafted message for the next stop, G & S Lounge; drive mode's door for it; the read-back after Log visit: Interested, follow up Thursday at 3:30 pm (the door opens then), her note](screenshots/phone/iphone-app.png)
 
 Every web picture comes from the guided tour, its finished plan or the landing's example day (`node scripts/doc-shots.mjs <base>`
-re-shoots them all from the current tree, the link preview `public/og.png` and the Devpost lead image too), where Doors'
-rules answer the chat and read the spoken note: no model and no live call.
+re-shoots them all from the current tree, the link preview `public/og.png` and the Devpost lead image too), shot on a
+dev server with no model connected, so Doors' rules answer the chat and read the spoken note in them.
 The iPhone picture is one live run on a simulator, with real Qloo calls. The demo, ledger, agent and proof numbers quoted here and in `SUBMISSION.md` are checked by `node scripts/doc-numbers.mjs --check`; the planner numbers come from `node scripts/sweep-routing.mjs`.
 
 ## Architecture

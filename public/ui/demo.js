@@ -5,8 +5,11 @@
 // Baked data: /data/demo/demo.json (scripts/bake-demo.mjs): her contact's record, the OSRM road matrix and every
 // day's road geometry.
 // Rules:
-//   - No call to Qloo, ORS or Gemini: every same-origin /api/ request is refused while the demo is on screen (counted
-//     in window.__demo.blocked). The plan lives in a memory store, never the visitor's saved plans.
+//   - The demo plan is baked: no call to Qloo, ORS or the plan-building endpoints. Every same-origin /api/ request is
+//     refused while the demo is on screen (counted in window.__demo.blocked) except LIVE (Jard 10-29: "I don't want
+//     any parts of the app we are submitting not working anywhere for anyone at any time"): Doors Agent (/api/agent,
+//     its log-visit and Day done polish) and the Aura voice (/api/voice/*) work as in the app, under the Worker's own
+//     per-visitor limits (counted in window.__demo.live). The plan lives in a memory store, never the visitor's saved plans.
 //   - Nothing waits on a timer the visitor can't see: every step waits for Continue or for the visitor's own click.
 //   - "Skip to the finished plan" (the banner, every step; once: card 1 no longer repeats it) jumps to the ?instant=1 end state with no reload.
 //   - The visitor can leave the script at any point (click around, close the tour, build early) and nothing breaks:
@@ -38,10 +41,7 @@ import { shownName } from "../lib/pool.js";
 import { loadStopData } from "./stop.js";
 import { createMap } from "./map.js";
 import { seedRoad, activePlayer, isInstant, reducedMotion, setRoadsOffline } from "./animate.js";
-import { setDriveOffline } from "./drive.js";
 import { createCoach } from "./coach.js";
-import { setTransport } from "./agent.js";
-import { answerByRules } from "../lib/agent-rules.js";
 import * as S from "./state.js";
 import { icon } from "../lib/icons.js"; // the Doors icon set (Jard 10-24 #1)
 
@@ -50,6 +50,8 @@ const DEMO_VISIT = { who: "Sam, the bar manager", note: "Liked the samples, hesi
 
 if (!document.querySelector('link[href="/css/demo.css"]')) document.head.append(Object.assign(document.createElement("link"), { rel: "stylesheet", href: "/css/demo.css" }));
 
+// what the demo lets through to the Worker (Jard 10-29): Doors Agent and the Aura voice, as in the app
+export const DEMO_LIVE = new Set(["/api/agent", "/api/agent/log-visit", "/api/agent/debrief", "/api/voice/say", "/api/voice/listen"]);
 const STOP = Symbol("demo stopped"); // the page left, or the visitor closed the tour
 const BUILT_EARLY = Symbol("build pressed"); // the visitor pressed Build my plan before the tour got there
 const BUILT = "doors.v2.built"; // B2's once-per-profile building flag (sessionStorage)
@@ -73,36 +75,29 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
   const save = (rec) => { if (ss && !ctl.dead) writeRecord(ss, rec); };
   // this tab only: the demo never touches the visitor's saved plans (memory when storage is blocked, or for ?instant=1)
   const store = loggingStore(createStore(ss ? prefixed(ss) : null), { nameOf: (id) => S.getPlan()?.venues?.[id]?.name ?? null });
-  const log = (window.__demo = { start: Date.now(), steps: [], blocked: [], errors: [], done: null });
+  const log = (window.__demo = { start: Date.now(), steps: [], blocked: [], live: [], errors: [], done: null });
   const ctl = { dead: false, off: false, skip: false, built: false, phase: "profile", planned: false, building: null };
   const coach = createCoach();
   let cleanups = [];
   let prewarm = null;
 
-  // ---------- no microphone while the demo is on screen: drive mode's sheet takes the typed words (no prompt) ----------
-  const realRec = { SpeechRecognition: window.SpeechRecognition, webkitSpeechRecognition: window.webkitSpeechRecognition };
-  window.SpeechRecognition = undefined;
-  window.webkitSpeechRecognition = undefined;
-
-  // ---------- Ask Doors in the demo: Doors' rules answer in the page (lib/agent-rules.js), no model, no /api call ----------
-  setTransport(async (path, body) => {
-    if (path !== "/api/agent") throw new Error("The demo makes no live calls.");
-    log.agent = (log.agent ?? 0) + 1;
-    return { ...answerByRules(body.messages, body.context, { now: `${body.context.today}T${body.context.now}` }), by: "rules" };
-  }, { notice: "In this demo, Doors' own rules answer, in your browser: no model is called and nothing leaves the page. Every answer shows its sources." });
+  // ---------- Ask Doors in the demo: the live Doors Agent (ui/agent.js's own fetch, through the allow-list below), on
+  // the demo plan as its context; drive mode's microphone, hands-free bar and Aura voice as in the app ----------
   document.documentElement.classList.add("in-demo"); // css: on a phone the Ask Doors sheet leaves room for the card
   try { for (let i = (ss?.length ?? 0) - 1; i >= 0; i--) { const k = ss.key(i); if (k?.startsWith("doors.v2.chat.Tidewell")) ss.removeItem(k); } } catch {} // a fresh chat each demo
 
-  // ---------- no live calls while the demo is on screen ----------
-  setDriveOffline(true); // drive reads a visit with the rules parser in the page, never /api/agent/log-visit
+  // ---------- no Qloo, ORS or plan-building calls while the demo is on screen (the plan is baked) ----------
   setRoadsOffline(true); // a day the demo didn't bake gets the labelled estimate, never /api/directions
   const realFetch = window.fetch;
   window.fetch = (input, init) => {
     const u = new URL(typeof input === "string" || input instanceof URL ? String(input) : input.url, location.href);
-    if (u.origin === location.origin && u.pathname.startsWith("/api/")) {
+    if (u.origin === location.origin && DEMO_LIVE.has(u.pathname)) {
+      log.live.push(u.pathname);
+      if (u.pathname === "/api/agent") log.agent = (log.agent ?? 0) + 1;
+    } else if (u.origin === location.origin && u.pathname.startsWith("/api/")) {
       log.blocked.push(u.pathname);
-      console.warn(`demo: refused ${u.pathname} (the demo makes no live calls)`);
-      return Promise.resolve(new Response(JSON.stringify({ error: "The demo makes no live calls." }), { status: 503, headers: { "content-type": "application/json" } }));
+      console.warn(`demo: refused ${u.pathname} (the demo's plan is baked)`);
+      return Promise.resolve(new Response(JSON.stringify({ error: "The demo's plan is baked: this call is off in the demo." }), { status: 503, headers: { "content-type": "application/json" } }));
     }
     return realFetch(input, init);
   };
@@ -434,7 +429,7 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
   const anyRow = (id) => row(id) ?? $(`.stop[data-id="${CSS.escape(id)}"]`, stage);
   const section = (title) => [...(sv()?.querySelectorAll(".sect") ?? [])].find((s) => s.querySelector("h4")?.textContent.startsWith(title)) ?? null;
 
-  // ---------- owner review 9: Ask Doors (ui/agent.js), the real panel; its turns go to the demo transport above ----------
+  // ---------- owner review 9: Ask Doors (ui/agent.js), the real panel; its turns go to the live Doors Agent ----------
   const panel = () => document.querySelector("#agentPanel");
   async function ask(key, text, o = {}) {
     if (!$('[data-agent="open"]', stage)) return false; // no chat in this build
@@ -448,7 +443,7 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
     try {
       await typeInto(input, text);
       await step(key, { target: () => document.querySelector("#agentInput")?.closest("form") ?? panel()?.querySelector('[data-agent="send"]') ?? panel(), done: () => replied, auto: () => panel()?.querySelector('[data-agent="send"]')?.click(), ...o });
-      await until(() => replied, 5000);
+      await until(() => replied, 30000); // a live turn: the panel's own cut-off (ui/agent.js TURN_MS 25 s) answers by rules past it
     } finally { window.removeEventListener("doors:agent-reply", on); }
     await pause(500);
     return true;
@@ -621,9 +616,10 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
   }
 
   // ---------- owner review 9: drive mode (ui/drive.js), the real overlay on the demo's plan ----------
-  // Done → her words typed into the sheet's text box → Log it: /api/agent/log-visit is refused like every /api/ call,
-  // so the visit goes through drive's own fallback, the rules parser (lib/visit-parse.js), in the page. The demo's
-  // Tuesday is a day ahead, so drive shows it as "a preview: not today".
+  // Done → her words typed into the sheet's text box → Log it: /api/agent/log-visit reads them, live, as in the app
+  // (drive's own fallback, the rules parser in lib/visit-parse.js, when it can't). The sheet's microphone listens while
+  // the demo types, as in the app; Log it ends the listening. The demo's Tuesday is a day ahead, so drive shows it as
+  // "a preview: not today".
   async function driveSteps() {
     if (!$("#t-drive", stage)) return; // no drive mode in this build: on to the next card
     const dv = () => document.querySelector("#drive");
@@ -639,7 +635,7 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
     await typeInto(dv()?.querySelector("#drive-text"), `done, liked it, come back ${when} at 3, hesitant about price`);
     await pause(300);
     dv()?.querySelector("[data-drive-log]")?.click();
-    await until(() => dv()?.querySelector("[data-drive-save]"), 8000);
+    await until(() => dv()?.querySelector("[data-drive-save]"), 30000); // a live read
     await step("save", {
       door,
       // judge 10 #1 / tour fit: on a phone the card docked over the read-back (390) or over Save (320); it points at both,
@@ -714,6 +710,10 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
     // once they open a door it steps aside (the tour is over; the banner keeps Restart)
     const endAside = () => { window.removeEventListener("doors:open-stop", endAside); if (matchMedia("(max-width: 700px)").matches) coach.hide(); };
     window.addEventListener("doors:open-stop", endAside);
+    // Jard 10-29: drive mode is the app's own, hands-free bar and all; the End card never sits over it (any width)
+    const driveAside = (e) => { if (e.target.closest?.("#t-drive")) { document.removeEventListener("click", driveAside, true); coach.hide(); } };
+    document.addEventListener("click", driveAside, true);
+    cleanups.push(() => document.removeEventListener("click", driveAside, true));
     $('[data-d="close"]', banner).hidden = true;
     $('[data-d="skip"]', banner).hidden = true;
     say("");
@@ -780,11 +780,8 @@ export function renderDemo(root, { index, params = {}, onHandOff }) {
     prewarm?.();
     window.removeEventListener("doors:building", onBuilt);
     window.fetch = realFetch;
-    setDriveOffline(false);
     setRoadsOffline(false);
     setOutcomeClock(null);
-    Object.assign(window, realRec);
-    setTransport(null);
     document.documentElement.classList.remove("in-demo");
     bannerRO?.disconnect();
     window.removeEventListener("scroll", bannerH);

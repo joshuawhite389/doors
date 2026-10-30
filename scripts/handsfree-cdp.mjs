@@ -6,10 +6,10 @@
 //      clip played on the one <audio>) → the Agent's answer (a stubbed /api/agent, drive mode) shown and read aloud
 //      (the stubbed Worker voice: an MP3 on the same <audio>; x-doors-voice phoebe)
 //   3. → when the reading ends it listens again; a quiet gap keeps it listening (never "stopped")
-//   4. Mute → "Muted"; Listen → listening again; Type instead → the chat panel, muted
+//   4. the mic → "Mic off"; again → listening; Type → the chat panel (the bar paused, listening again after)
 //   5. Read it to me → pressed, "Reading…" and a Stop; back to normal when the reading ends
-//   6. Voice off → the bar goes; Agent shows the bar saying Voice is off (r8hf: never the chat box without a word);
-//      Type instead opens the chat panel
+//   6. Mic off = Voice off, remembered; the bar stays up and says so (r8hf: never the chat box without a word); Type
+//      opens the chat panel
 // The browser's speech is stubbed (window.__says: what each listen hears; "" = nothing). The page can't record here
 // (mediaDevices removed), so the ear is the browser's recognizer. No model, no Qloo, no spend.
 // Usage: node scripts/handsfree-cdp.mjs <base-url> <out-dir> [width] [height] [browser]   (prints a JSON report)
@@ -124,8 +124,8 @@ check("the tap that opened drive mode unlocked the <audio> (a silence played)", 
 // 2. → working on it (the acknowledgement) → speaking, the answer shown
 await waitFor(`document.querySelector(".hf")?.dataset.phase === "think"`, 8000);
 check("you said shows the words", /tell me about my next stop/.test(await ev(`document.querySelector("[data-hf-words]").textContent`)), await ev(`document.querySelector("[data-hf-words]").textContent`));
-await waitFor(`/^(Let me check on that, one second\.|One sec, looking\.|I'll grab that for you\.)$/.test(document.querySelector("[data-hf-hint]").textContent)`, 3000);
-const ackLine = await ev(`document.querySelector("[data-hf-hint]").textContent`);
+await waitFor(`/^(Let me check on that, one second\.|One sec, looking\.|I'll grab that for you\.)$/.test(document.querySelector("[data-hf-note]").textContent)`, 3000);
+const ackLine = await ev(`document.querySelector("[data-hf-note]").textContent`);
 check("the acknowledgement line shows at once (a question → an ask line)", /^(Let me check on that, one second\.|One sec, looking\.|I'll grab that for you\.)$/.test(ackLine), ackLine);
 check("its clip played on the page's <audio>", (await L()).some((e) => /^\/audio\/ack\/ask-\d\.mp3$/.test(e.play)), (await L()).filter((e) => e.play));
 await shot("02-working");
@@ -145,20 +145,21 @@ await waitFor(`window.__log.filter((e) => e.rec === "start").length >= ${nStart 
 check("a quiet gap keeps it listening (never stopped)", (await phase()) === "listen" && !(await ev("window.__phases")).includes("stopped"), { phases: await ev("window.__phases"), audio: await ev(`(() => { const a = window.__audio; return a ? { src: a.src.slice(0, 30), t: a.currentTime, paused: a.paused, ended: a.ended, rs: a.readyState, ns: a.networkState, err: a.error && a.error.code, dur: a.duration } : null; })()`) });
 await shot("04-listening-again");
 check("the turn is kept in the chat", /tell me about my next stop/.test(await ev(`Object.keys(sessionStorage).filter((k) => k.includes("chat")).map((k) => sessionStorage.getItem(k)).join(" ")`) ?? ""), null);
-// 4. Mute → muted; Listen → listening; Type instead → the chat panel, muted
-await click("[data-hf-mute]");
+// 4. the mic → Mic off; again → listening; Type → the chat panel, the bar paused, listening again when it closes
+await click("[data-hf-big]");
 await sleep(150);
 await shot("05-muted");
-check("Mute: muted, the button says Listen", (await phase()) === "muted" && (await ev(`document.querySelector("[data-hf-mute]").textContent`)) === "Listen", await phase());
-await ev(`window.__says = ["", "", "", "", ""]`);
-await click("[data-hf-mute]");
+check("the mic: Mic off", (await phase()) === "muted" && (await ev(`document.querySelector("[data-hf-status]").textContent`)) === "Mic off: tap to turn it on", await phase());
+await ev(`window.__says = ["", "", "", "", "", "", "", ""]`);
+await click("[data-hf-big]");
 await sleep(150);
-check("Listen: listening again", (await phase()) === "listen", await phase());
+check("the mic again: listening", (await phase()) === "listen", await phase());
 await click("[data-hf-type]");
 await sleep(400);
-check("Type instead: the chat panel, and muted", (await phase()) === "muted" && (await ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`)), await phase());
+check("Type: the chat panel, the bar paused", (await phase()) === "paused" && (await ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`)), await phase());
 await ev(`document.querySelector("#agentPanel [data-agent=close], #agentPanel .aclose, #agentPanel button[aria-label='Close']")?.click()`);
-await sleep(200);
+await sleep(400);
+check("the panel closed: listening again", (await phase()) === "listen", await phase());
 // 5. Read it to me → pressed and Reading… with a Stop; back when the reading ends
 const logBefore = (await L()).length;
 await click("[data-drive-read]");
@@ -169,18 +170,15 @@ check("the reading is the Worker's voice on the <audio>", (await L()).slice(logB
 await waitFor(`document.querySelector("[data-drive-read]")?.getAttribute("aria-pressed") === "false"`, 8000);
 check("back to Read it to me when the reading ends", await ev(`/Read it to me/.test(document.querySelector("[data-drive-read]").textContent) && !document.querySelector("[data-drive-stopread]")`), null);
 await shot("07-read-done");
-// 6. Voice off → the bar goes; Agent opens the chat panel
-await click("[data-drive-voice]");
+// 6. Mic off is Voice off (remembered); Type still opens the chat panel
+await click("[data-hf-big]");
 await sleep(200);
-check("Voice off: the bar goes", await ev(`document.querySelector(".hf").hidden && !document.documentElement.classList.contains("hf-open")`), null);
-await click("[data-drive-ask]");
-await sleep(400);
-await shot("08-voiceoff-bar");
-check("Voice off: Agent shows the bar saying Voice is off, not the chat panel (r8hf)", (await phase()) === "off" && /Voice is off/.test(await ev(`document.querySelector("[data-hf-note]").textContent`)) && !(await ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`)), { phase: await phase(), note: await ev(`document.querySelector("[data-hf-note]").textContent`) });
+check("Mic off: the bar stays, Voice off remembered", (await phase()) === "muted" && await ev(`!document.querySelector(".hf").hidden && localStorage.getItem("doors:drive-voice") === "off"`), null);
+await shot("08-micoff-bar");
 await click("[data-hf-type]");
 await sleep(400);
-await shot("09-voiceoff-panel");
-check("Type instead opens the chat panel", await ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`), null);
+await shot("09-micoff-panel");
+check("Type opens the chat panel", await ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`), null);
 check("no page errors", !problems.length, problems);
 check("phases in order: listen, think, speak, listen", (await ev("window.__phases.join()")).startsWith("listen,think,speak,listen"), await ev("window.__phases"));
 const report = { width: +w, checks, failed: checks.filter((c) => !c.ok).length, agentCalls: agentBodies.length };

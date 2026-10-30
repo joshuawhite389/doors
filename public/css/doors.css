@@ -75,7 +75,6 @@ input[type=date]:focus,input[type=time]:focus{outline:3px solid var(--green);out
 .price{font-family:"Inter Tight",Inter,sans-serif;font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 2px}
 .price small{font-size:15px;font-weight:500;color:var(--ink2);letter-spacing:0}
 .tagline{margin:96px 40px 0;background:var(--green-soft);color:var(--green);border-radius:var(--rl);padding:30px 34px;font-family:"Inter Tight",Inter,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
-.tagline span{display:block;font-family:Inter,sans-serif;font-size:15px;font-weight:500;margin-top:6px;letter-spacing:0}
 .lfoot{margin:72px 40px 0;padding:24px 0 48px;border-top:1px solid var(--line);display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:var(--ink3)}
 .lfoot .r{margin-left:auto}
 

@@ -1,7 +1,7 @@
 // Post-publish smoke: everything a judge hits on the live site, in a few minutes, each check PASS / FAIL / WARN / SKIP
 // with its reason, then a table and an exit code (1 = a FAIL). Read-only and free by default: no Qloo call (the one
 // /api/route it sends is a saved run, answered from KV with calls 0), no model call (the Agent check is a rule Doors
-// answers itself), no voice, nothing deployed. Steps for the Sunday run: LIVE-SMOKE.md.
+// answers itself; the tour's Agent and voice calls are stubbed in demo-cdp.mjs), no voice, nothing deployed. Steps for the Sunday run: LIVE-SMOKE.md.
 // Usage: node scripts/live-smoke.mjs <base-url> [--out <dir>] [--sizes 390,1400] [--no-tour] [--live-model] [--secrets]
 //   --live-model  one Doors Agent model turn (costs about a cent of Claude); off by default
 //   --secrets     wrangler secret list on the deployed Worker (names only, never values) to see IP_SALT and
@@ -218,11 +218,14 @@ else for (const w of sizes) {
     const problems = log.match(/^problems (.*)$/ms)?.[1].trim() ?? "no report (the run did not finish)";
     const fin = (() => { try { return JSON.parse(log.match(/^final (.*)$/m)?.[1] ?? "{}"); } catch { return {}; } })();
     const steps = (fin.steps ?? "").split(",").filter(Boolean).length;
-    res(label, problems === "none" ? "PASS" : "FAIL", problems === "none" ? `${steps} steps, done ${fin.done}, agent answered ${fin.agent}× by rules in the page` : problems.split("\n").slice(0, 3).join("; "));
-    // voice/say (or any /api) never leaves the page during the tour: fetch is guarded, the network log catches the rest
+    res(label, problems === "none" ? "PASS" : "FAIL", problems === "none" ? `${steps} steps, done ${fin.done}, ${fin.agent} Agent turns (answered free by demo-cdp's stub)` : problems.split("\n").slice(0, 3).join("; "));
+    // Jard 10-29: the tour calls only Doors Agent and the Aura voice (as the app does; demo-cdp stubs them, so no
+    // spend); the plan is baked, so no Qloo, ORS or plan-building call leaves the page
+    const LIVE = /^\/api\/(agent(\/log-visit|\/debrief)?|voice\/(say|listen))$/;
     const net = fin.net ?? null;
-    if (net) res(`tour sent no /api @${w}`, net.length ? "FAIL" : "PASS", net.length ? `reached the network: ${net.join(" ")}` : `0 /api requests on the network (voice/say included); ${fin.blocked?.length ?? 0} refused in the page`);
-    else res(`tour sent no /api @${w}`, "FAIL", "no network log from demo-cdp.mjs");
+    const stray = net ? net.filter((x) => !LIVE.test(x)) : null;
+    if (net) res(`tour sent only Agent/voice /api @${w}`, stray.length ? "FAIL" : "PASS", stray.length ? `reached the network: ${[...new Set(stray)].join(" ")}` : `${net.length} Agent/voice requests (stubbed), no other /api; ${fin.blocked?.length ?? 0} refused in the page`);
+    else res(`tour sent only Agent/voice /api @${w}`, "FAIL", "no network log from demo-cdp.mjs");
   });
 }
 

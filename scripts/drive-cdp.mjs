@@ -62,6 +62,7 @@ await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
   // a stand-in microphone: it "hears" window.__say
   class Rec { start() { setTimeout(() => { const t = window.__say || ""; this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: t }], { isFinal: true })] }); this.onend?.(); }, 300); } stop() {} }
   window.SpeechRecognition = Rec; delete window.webkitSpeechRecognition;
+  try { Object.defineProperty(navigator, "mediaDevices", { value: undefined }); } catch {} // drivefix: the bar's ear is the recognizer here (no permission prompt headless)
   window.__spoken = []; if (window.speechSynthesis) { speechSynthesis.speak = (u) => window.__spoken.push(u.text); speechSynthesis.cancel = () => {}; }
 })();` });
 await send("Emulation.setDeviceMetricsOverride", { width: +w, height: +h, deviceScaleFactor: 1, mobile: +w < 700 });
@@ -71,7 +72,7 @@ const report = { width: +w, steps: [] };
 const cur = () => ev(`document.querySelector("[data-drive-door]")?.dataset.id ?? null`);
 const curName = () => ev(`document.querySelector(".dv-name")?.textContent ?? null`);
 const saved = () => ev(`JSON.parse(localStorage.getItem(${JSON.stringify(key)}))`);
-const step = async (name, extra = {}) => { await sleep(400); await shot(name); report.steps.push({ name, door: await curName(), progress: await ev(`document.querySelector(".dv-day span")?.textContent`), ...extra }); };
+const step = async (name, extra = {}) => { await sleep(400); await shot(name); report.steps.push({ name, door: await curName(), progress: await ev(`document.querySelector(".dv-day b")?.textContent`), ...extra }); };
 
 await waitFor(`!!document.querySelector("[data-drive-door] .dv-talk")`, 30000);
 await step("01-start");
@@ -79,9 +80,11 @@ const ids = [];
 
 // door 1: by voice
 ids.push(await cur());
-await ev(`window.__say = "done, loved it, wants samples"`);
+// drivefix: Log visit has no mic of its own; the hands-free bar listens for the visit (what it hears goes to the log)
 await click("[data-drive-done]");
+await ev(`window.__say = "done, loved it, wants samples"`);
 await waitFor(`!!document.querySelector("[data-drive-readback]")`);
+await ev(`window.__say = ""`);
 await step("02-voice-readback", { readback: await ev(`document.querySelector("[data-drive-readback]").textContent`), spoken: await ev(`window.__spoken.slice(-1)[0]`) });
 await click("[data-drive-save]");
 await waitFor(`document.querySelector("[data-drive-door]")?.dataset.id !== ${JSON.stringify(ids[0])}`);
@@ -124,6 +127,7 @@ await waitFor(`document.querySelector("[data-drive-door]")?.dataset.id !== ${JSO
 
 // skip for now: the current door goes to the end of the day
 const before = await cur();
+await ev(`document.querySelector("[data-drive-more]").open = true`); // drivefix: Skip is under More about this door
 await click("[data-drive-skip]");
 await waitFor(`document.querySelector("[data-drive-door]")?.dataset.id !== ${JSON.stringify(before)}`);
 await step("08-skipped", { skipped: before });

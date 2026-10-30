@@ -9,7 +9,7 @@ untested (say "untested" or leave it out).
 
 ## 1. The 2-minute walkthrough (≈ 300 spoken words)
 
-Open the hosted app, click **Watch the tour**. Every number below comes from the guided demo, which makes no live calls.
+Open the hosted app, click **Watch the tour**. Every number below comes from the guided demo, whose plan is baked (no Qloo or routing call; Doors Agent and the voice are live).
 
 | Time | On screen (tour card) | Say | Status |
 |---|---|---|---|

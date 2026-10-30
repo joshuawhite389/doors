@@ -93,11 +93,10 @@ test("§9.8: every text field of every shipped data file (public/data/**) carrie
   assert.deepEqual(hits, []);
 });
 
-// judge pass 2 (27): said once per screen, not three times: the landing, the app's footer (under every app screen) and,
-// on every stop (a phone's stop sheet covers the footer), its questions' note
-test("§9.2: 'Not a distribution check' on the landing and the app footer; every stop says Qloo doesn't know what they stock", () => {
+// judge pass 2 (27): said once per screen, not three times: the app's footer (under every app screen) and, on every
+// stop (a phone's stop sheet covers the footer), its questions' note. Jard 10-29: not on the landing (its tagline only)
+test("§9.2: 'Not a distribution check' in the app footer; every stop says Qloo doesn't know what they stock", () => {
   const NADC = "Not a distribution check";
-  assert.ok(read("public/index.html").includes(NADC), "landing");
   assert.ok(read("public/app.html").includes(NADC), "app footer");
   assert.match(read("public/ui/stop.js"), /<p class="ask-note">Qloo doesn't know what they stock — ask\.<\/p>/, "every stop");
   for (const p of ["public/ui/plan.js", "public/ui/stop.js", "public/ui/room.js", "public/ui/export.js", "public/ui/why.js"]) assert.ok(!read(p).includes(NADC), `${p} repeats the app footer`);

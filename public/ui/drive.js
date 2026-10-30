@@ -31,14 +31,14 @@ import { makeOutcome, returnVisitLabel, outcomeText, localStamp, QUICK_TEXT } fr
 import { niceDate } from "../lib/profile.js";
 import { clockShort } from "../lib/schedule.js";
 import { loadStopData, modelFor } from "./stop.js";
-import { listen as hear, say as voiceSay, sayAgent, hush, canListen, canSay, setVoiceOffline, micLabel, unlockAudio, whenQuiet, voiceUsed, whyCantListen } from "./voice.js"; // voice in any browser
+import { say as voiceSay, sayAgent, hush, canListen, canSay, setVoiceOffline, unlockAudio, whenQuiet, voiceUsed, whyCantListen } from "./voice.js"; // voice in any browser
 import { savedNavApp, setNavApp, currentNavName, navAppButtons } from "./navapp.js"; // Navigate opens the rep's app (PARITY S14)
 import { openTill } from "../lib/pool.js";
 import { parseHours } from "../lib/core.js";
 import { addressLine } from "../lib/stopmodel.js";
 import { replanSummary } from "../lib/planview.js";
 import { notesOf, visitNote, makeNote, NOTE_MAX } from "../lib/door-notes.js"; // door notes
-import { mountHandsFree, HF_VOICE_OFF } from "./handsfree.js"; // group 3 #8: the hands-free Agent
+import { mountHandsFree } from "./handsfree.js"; // group 3 #8: the hands-free Agent
 import { polishBody, polishView, POLISH_PATH, POLISH_LABEL, POLISH_BUSY, POLISH_FOOT } from "../lib/day-polish.js"; // Doors Agent ability 9
 import { createMap, setRoute, addPins, addStart, clearMarkers, fitTo } from "./map.js"; // the Day tab's map (the phone's DayMap)
 import { roadFor } from "./animate.js";
@@ -48,8 +48,10 @@ import { roadFor } from "./animate.js";
 // door notes on the drive screen: the newest three, read before walking in (edit them on the stop)
 import { fitDriveResult, movedDriveResult, comeBackDay, driveSpeech, altLabel, otherFollowUps, keptText } from "../lib/fu-check.js";
 import { icon } from "../lib/icons.js"; // the Doors icon set (Jard 10-24 #1)
-const voiceHTML = (on) => `${icon(on ? "voice" : "mute", 16, "ic l")}Voice ${on ? "on" : "off"}`;
-const MIC_HOW = `${icon("mic", 20, "ic l")}Tap and say how it went`;
+// what a spoken read-back is answered with to save it
+const SAVE_WORDS = /^(save|save it|yes|yeah|yep|ok|okay|correct|that's right|right|sounds good|good)[.!]?$/i;
+// the card's safety line (web drivefix: one way to talk, the bar)
+const SAFE = "For between stops: park before you read or type. To log a visit, tap Log visit and say how it went, or tap an answer.";
 const PHONE_VOICE = "The Doors voice isn't available right now: this is the browser's own voice.";
 
 const CSS = "/css/drive.css";
@@ -67,8 +69,9 @@ let voiceOn = (() => { try { return localStorage.getItem(VOICE_KEY) !== "off"; }
 // a leg's miles, labelled road or estimated (§9.4)
 
 // openDrive({now}) → close({quiet}). now() → {date, min} (the plan view's clock).
-// The guided demo makes no live calls (preaudit): while it runs, a visit is read by the rules parser in the
-// page and never sent to /api/agent/log-visit.
+// Offline: a visit is read by the rules parser in the page and never sent to /api/agent/log-visit, and the Agent
+// answers in the panel by rules. The guided demo no longer sets it (Jard 10-29: the tour works like the app: the
+// hands-free bar, the Aura voice and the live Agent); kept for a page that must make no calls.
 let offline = false;
 // Doors Agent ability 9: the Day done polish, per day ({date, busy, view}); only on the rep's tap, never in the demo
 let polish = null;
@@ -115,18 +118,14 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
   let screen = "door"; // "door" | "day" (the phone's Door / Day tabs; Ask is the Ask Doors button)
   let viewId = null; // a stop opened from the Day list that isn't the current door (the phone's "viewed" door)
   let sheet = null; // {id, phase: "listen" | "type" | "read" | "ask", text, result, error}
-  let stopRec = null; // ends the listening under way (voice.js)
   // a note on the door from the road (PARITY M1, the phone's Drive.tsx the same): said → saved at once; typed → Save note
-  let note = { id: null, phase: "idle", secs: 0, live: "", error: null }; // the door the mic was started on, and its phase
-  let noteStop = null; // ends the note's listening
+  let noteCap = null; // the door whose note the bar is listening for (Say a note)
   let noteBox = null; // the typed box: null (closed) or {id, text}
-  let micT = null; // the seconds on a listening mic
+  let moreOpen = false; // "More about this door" is open (kept across redraws and doors)
   let navPick = false; // "Change" under Navigate is open
   let data = null; // the stop data (talking points), loaded once
   let busy = false;
   let readKey = null; // "read" (Read it to me) | "repeat" (Say it again) while that button's words are being read
-  let sheetHeld = false; // the hands-free Agent is paused for the Log visit sheet
-  let noteHeld = false; // … or for the note mic
   let phoneVoiceSaid = false; // the one toast when a read-aloud had to use the browser's own voice
   let toastT = null;
   let wake = null;
@@ -149,11 +148,10 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     }
     const q = driveQueue(p, k);
     const today = q.day.date === now().date;
-    holdHands();
     // what the rep is typing survives a redraw (a voice answer or failure can arrive mid-word)
     const box = $("#drive-text", el);
     const typing = box && document.activeElement === box ? [box.selectionStart, box.selectionEnd] : null;
-    if (box && sheet && (sheet.phase === "type" || sheet.phase === "listen" || sheet.phase === "reading") && box.value && !busy) sheet.text = box.value;
+    if (box && sheet && sheet.phase === "type" && box.value && !busy) sheet.text = box.value;
     const nbox = $("#drive-note", el);
     if (nbox && noteBox) noteBox.text = nbox.value;
     const ntyping = nbox && document.activeElement === nbox ? [nbox.selectionStart, nbox.selectionEnd] : null;
@@ -211,16 +209,42 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     if (src) src.textContent = solid ? road.label || "Roads" : "Route estimated: straight lines between stops";
   }
 
+  // drivefix (Jard 10-29): one compact header. Row 1: Pause (or ×), the day in one line, All n stops. Row 2, on a door:
+  // ‹ Previous door · Stop 2 of 7 · Next door ›, always there (the door shown is the current one or one looked at).
+  // The Agent and Voice buttons went: the bar at the bottom is the one place to talk (its mic is Voice on/off).
   function top(q, today) {
-    const dots = q ? q.stops.map((s) => `<i class="${s.done ? "on" : q.current?.id === s.id ? "cur" : ""}"></i>`).join("") : "";
+    const pause = q && today && !q.finished;
+    const shown = q && screen === "door" ? shownIndex(q) : -1;
+    const nav = shown >= 0 ? `<nav class="dv-stepper" aria-label="Doors on this day">
+        <button type="button" class="dv-step" data-drive-prev ${shown > 0 ? "" : "disabled"}><span aria-hidden="true">‹</span> Previous<span class="dv-wd"> door</span></button>
+        <b class="dv-stepat" data-drive-stepat>Stop ${q.stops[shown].n} of ${q.total}</b>
+        <button type="button" class="dv-step" data-drive-next ${shown < q.stops.length - 1 ? "" : "disabled"}>Next<span class="dv-wd"> door</span> <span aria-hidden="true">›</span></button></nav>` : "";
     return `<header class="dv-top">
-      <button type="button" class="dv-x dv-pause" data-drive-close aria-label="${q && today && !q.finished ? "Pause your day: back to the plan, it keeps your place" : "Back to the plan"}">${q && today && !q.finished ? "<span class=\"dv-bars\" aria-hidden=\"true\"><i></i><i></i></span><small>Pause</small>" : icon("close", 22)}</button>
-      <button type="button" class="dv-askfab" data-drive-ask aria-controls="agentPanel">Agent</button>
-      <div class="dv-day">${q ? `<b>${today ? "Today" : esc(W.dayTitle(q.day.date))}</b>${today ? "" : `<small class="dv-ahead">${esc(W.notToday(q.day.date, now().date))}</small>`}<span>${q.finished && canResume() ? "Stopped for today" : W.progress(q)}</span><b class="dv-line">${esc(q.finished && canResume() ? "Today · Stopped for today" : W.dayLine(q, q.day.date, today))}</b>${today ? "" : `<small class="dv-ahead dv-line">${esc(W.previewShort(q.day.date, now().date))}</small>`}` : "<b>Start my day</b>"}</div>
-      ${q ? `<div class="dv-dots" aria-hidden="true">${dots}</div>` : ""}
-      <div class="dv-tabs">${q && !(q.finished && rec(q.day.date).ended) ? `<button type="button" class="dv-voice" data-drive-screen="${screen === "day" ? "door" : "day"}" aria-pressed="${screen === "day"}">${screen === "day" ? "Back to the door" : `All ${q.total} stops`}</button>` : ""}
-      <button type="button" class="dv-voice" data-drive-voice aria-pressed="${voiceOn}">${voiceHTML(voiceOn)}</button></div>
+      <div class="dv-row1">
+      <button type="button" class="dv-x dv-pause" data-drive-close aria-label="${pause ? "Pause your day: back to the plan, it keeps your place" : "Back to the plan"}">${pause ? "<span class=\"dv-bars\" aria-hidden=\"true\"><i></i><i></i></span><small>Pause</small>" : icon("close", 22)}</button>
+      <div class="dv-day">${q ? `<b>${esc(q.finished && canResume() ? "Today · Stopped for today" : W.dayLine(q, q.day.date, today))}</b>${today ? "" : `<small class="dv-ahead dv-wide">${esc(W.notToday(q.day.date, now().date))}</small><small class="dv-ahead dv-narrow">${esc(W.previewShort(q.day.date, now().date))}</small>`}` : "<b>Start my day</b>"}</div>
+      ${q && !(q.finished && rec(q.day.date).ended) ? `<button type="button" class="dv-voice" data-drive-screen="${screen === "day" ? "door" : "day"}" aria-pressed="${screen === "day"}">${screen === "day" ? "Back to the door" : `All ${q.total} stops`}</button>` : ""}
+      </div>${nav}
     </header>`;
+  }
+  // the door on screen, as an index into the day's stops (-1: none, the day is done)
+  function shownIndex(q) {
+    const id = (viewId && q.stops.some((x) => x.id === viewId) ? viewId : null) ?? q.current?.id;
+    return id ? q.stops.findIndex((x) => x.id === id) : -1;
+  }
+  // Previous / Next door (and Back): the door before or after the one on screen; the current door shows as itself
+  function stepDoor(by) {
+    const q = driveQueue(plan(), dayIndex());
+    const i = shownIndex(q);
+    const to = q.stops[i + by];
+    if (i < 0 || !to) return false;
+    stopCapture();
+    sheet = null;
+    screen = "door";
+    viewId = to.id === q.current?.id ? null : to.id;
+    render();
+    el.scrollTo?.({ top: 0 });
+    return true;
   }
 
   // Running late's doors that don't fit today (GROUP3 item 9): the same two choices as Stop for today, with what Move
@@ -249,56 +273,60 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     const who = m ? atDoor(m).askFor : null;
     const nav = navigateUrl(v, navigator.userAgent, savedNavApp());
     const fu = returnVisitLabel(c.stop, q.day, p.outcomes?.[c.id]); // with the day she said when the planner moved it
-    // audit 2 #8: what to say sits right under the door's name (it was two scrolls down, under an empty notes box); the
-    // reasons and your notes follow it
+    // drivefix (Jard 10-29: the card was a long scroll, hard in a car): the essentials first — who to ask for, the
+    // opener, the ask, Read it to me — then Navigate and Log visit (pinned above the bar); everything else (to the
+    // buyer, questions, why now, the crowd, why this door, your notes, running late, skip, remove, stop for today) is
+    // folded under "More about this door", which stays open or shut as the rep left it
+    const late2 = !viewed && late?.out.length ? lateHTML(p, q, late.out, today) : "";
     return `<main class="dv-door" data-drive-door data-id="${esc(c.id)}"${viewed ? " data-drive-viewed" : ""}>
-      ${viewed ? `<button type="button" class="dv-viewing" data-drive-back>Not your current door${c.done ? " (done)" : ""} · Back to ${esc(q.current?.name ?? "the day")}</button>` : ""}
-      ${late ? `<div class="dv-late" data-drive-late role="status"><b>${esc(late.text)}</b>${late.out.length ? lateHTML(p, q, late.out, today) : ""}</div>` : ""}
-      <p class="dv-kick">Stop ${c.n} of ${q.total}${Number.isFinite(c.eta) ? ` · planned ${esc(clockShort(c.eta))}` : ""}${fu ? ` · ${esc(fu)}` : ""}</p>
+      ${viewed ? `<button type="button" class="dv-viewing" data-drive-back>${c.done ? "Done already" : "Not your current door"} · Back to ${esc(q.current?.name ?? "the day")}</button>` : ""}
+      ${late ? `<div class="dv-late" data-drive-late role="status"><b>${esc(late.text)}</b>${late2}</div>` : ""}
+      ${Number.isFinite(c.eta) || fu ? `<p class="dv-kick">${Number.isFinite(c.eta) ? `Planned ${esc(clockShort(c.eta))}` : ""}${Number.isFinite(c.eta) && fu ? " · " : ""}${fu ? esc(fu) : ""}</p>` : ""}
       <h1 class="dv-name">${esc(c.name)}</h1>
       <p class="dv-addr">${esc(addressLine(v.address, p.city?.name ?? p.profile?.cityName))}</p>
       ${m?.hoursToday ? `<p class="dv-hours">${esc(m.hoursToday)}${c.stop.openAtArrival === false ? ` · <b>${esc(openTill(c.stop, { parsed: parseHours(v.hours), day: q.day.day }))}</b>` : ""}</p>` : ""}
       ${last ? `<p class="dv-hours">Last time: ${esc(last)}</p>` : ""}
-      ${t ? `<section class="dv-talk">${who ? `<p class="dv-askfor" data-drive-askfor><span>Ask for</span> ${esc(/^(The|A|An|Whoever) /.test(who) ? who[0].toLowerCase() + who.slice(1) : who)}</p>` : ""}<h2>Opener</h2><p class="dv-opener">${esc(t.opener)}</p>${t.toBuyer ? `<h2>To the buyer</h2><p class="dv-opener">${esc(t.toBuyer)}</p>` : ""}
-        ${t.questions?.length ? `<h2>Questions</h2><ul>${t.questions.slice(0, 2).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${t ? `<section class="dv-talk">${who ? `<p class="dv-askfor" data-drive-askfor><span>Ask for</span> ${esc(/^(The|A|An|Whoever) /.test(who) ? who[0].toLowerCase() + who.slice(1) : who)}</p>` : ""}<h2>Opener</h2><p class="dv-opener">${esc(t.opener)}</p>
         <h2>The ask</h2><p>${esc(cap(t.ask))}.</p>
         ${canSay() ? readBtn("read", "dv-mid", "Read it to me") : ""}</section>` : `<p class="dv-muted">Loading what to say…</p>`}
-      ${c.stop.orderReason ? `<p class="dv-hours">Why now: ${esc(c.stop.orderReason)}</p>` : ""}
-      ${crowd || m?.whyLine ? `<section class="dv-why">${crowd ? `<h2>${esc(crowd.title)}</h2><p>${esc(crowd.text)}</p>` : ""}${m?.whyLine ? `<h2>Why this door</h2><small>${esc(m.whyLine)}</small>` : ""}</section>` : ""}
-      ${notesHTML(p, c.id, c.name)}
       <div class="dv-acts">
-        ${viewed ? "" : `<div class="dv-latectl" data-drive-latectl>${latePicking ? `<span>${esc(LC.ask)}</span>${LATE_PICKS.map((x) => `<button type="button" class="dv-chip" data-drive-lateby="${x}" aria-pressed="${lateBy === x}">${esc(latePickLabel(x))}</button>`).join("")}${lateBy ? `<button type="button" class="dv-chip" data-drive-lateby="0">${esc(LC.clear)}</button>` : ""}` : `<button type="button" class="dv-mid line" data-drive-latepick aria-expanded="false">${esc(lateBy ? `${LC.open} · ${latePickLabel(lateBy)}` : LC.shift ?? LC.open)}</button>`}</div>`}
         ${nav ? `<a class="dv-big line dv-nav" data-drive-nav href="${esc(nav)}" target="_blank" rel="noopener"><span>Navigate</span>${c.stop.legMi != null ? ` <small>${esc(mi(c.stop))}</small>` : ""}</a>` : ""}<!-- small (intuitiveness audit pass 1): the distance is a caption that breaks whole, never "Navigate · / 4.4 mi" -->
         <button type="button" class="dv-big primary" data-drive-done>${W.done}</button>
       </div>
-      ${nav ? `<div class="dv-navwith" data-drive-navwith>${navPick ? `<span>Navigate with</span>${navAppButtons("dv-mid line")}` : `<button type="button" class="dv-link" data-drive-navpick aria-label="Navigation app: ${esc(currentNavName())}. Change">Opens ${esc(currentNavName())} · <b>Change</b></button>`}</div>` : ""}
-      ${viewed ? "" : `<div class="dv-sec">
+      <details class="dv-more" data-drive-more${moreOpen ? " open" : ""}><summary>More about this door</summary>
+      ${t && (t.toBuyer || t.questions?.length) ? `<section class="dv-talk">${t.toBuyer ? `<h2>To the buyer</h2><p class="dv-opener">${esc(t.toBuyer)}</p>` : ""}
+        ${t.questions?.length ? `<h2>Questions</h2><ul>${t.questions.slice(0, 2).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</section>` : ""}
+      ${c.stop.orderReason ? `<p class="dv-hours">Why now: ${esc(c.stop.orderReason)}</p>` : ""}
+      ${crowd || m?.whyLine ? `<section class="dv-why">${crowd ? `<h2>${esc(crowd.title)}</h2><p>${esc(crowd.text)}</p>` : ""}${m?.whyLine ? `<h2>Why this door</h2><small>${esc(m.whyLine)}</small>` : ""}</section>` : ""}
+      ${notesHTML(p, c.id, c.name)}
+      ${nav ? `<div class="dv-navwith" data-drive-navwith>${navPick ? `<span>Navigate with</span>${navAppButtons("dv-mid line")}` : `<button type="button" class="dv-link" data-drive-navpick aria-label="Navigation app: ${esc(currentNavName())}. Change">Navigate opens ${esc(currentNavName())} · <b>Change</b></button>`}</div>` : ""}
+      ${viewed ? "" : `<div class="dv-latectl" data-drive-latectl>${latePicking ? `<span>${esc(LC.ask)}</span>${LATE_PICKS.map((x) => `<button type="button" class="dv-chip" data-drive-lateby="${x}" aria-pressed="${lateBy === x}">${esc(latePickLabel(x))}</button>`).join("")}${lateBy ? `<button type="button" class="dv-chip" data-drive-lateby="0">${esc(LC.clear)}</button>` : ""}` : `<button type="button" class="dv-mid line" data-drive-latepick aria-expanded="false">${esc(lateBy ? `${LC.open} · ${latePickLabel(lateBy)}` : LC.shift ?? LC.open)}</button>`}</div>
+      <div class="dv-sec">
         ${nx ? `<button type="button" class="dv-mid line" data-drive-skip>${rec().skipped.includes(c.id) ? "Skip again" : "Skip for now"}</button>` : ""}
         ${nx ? `<p class="dv-next">Then: <b>${esc(nx.name)}</b>${nx.stop.legMi != null ? ` · ${esc(mi(nx.stop))}` : ""}</p>` : `<p class="dv-next">Last door of the day</p>`}
       </div>
       <div class="dv-off">${S.can("removeStop") ? `<button type="button" class="dv-mid line" data-drive-remove>Remove from ${today ? "today" : "this day"}</button>` : ""}
         ${today && S.can("endDay") ? `<button type="button" class="dv-mid line" data-drive-end>${esc(SW.button)}</button>` : ""}</div>`}
-      <p class="dv-safe">${esc(W.safe(canListen()))}</p>
+      <p class="dv-safe">${esc(SAFE)}</p>
+      </details>
     </main>`;
   }
 
-  // the door's notes (PARITY M1, as the phone): always shown; the newest 3, a mic "Tap and say a note" (said → saved at
-  // once) and "Or type a note" (a box, Save note / Cancel); no mic in this browser: "Add a note". Errors: a plain line.
+  // the door's notes (PARITY M1, as the phone): the newest 3; "Say a note" lends the bar's ear to the note (drivefix:
+  // the one microphone; the bar says "Listening: say your note", and what is said is saved at once), "Type a note" a
+  // box (Save note / Cancel). The bar can't listen: only Type a note. Errors: a plain line.
   function notesHTML(p, id, name) {
     const ns = notesOf(p.slots, id);
-    const ph = note.id === id ? note.phase : "idle";
-    const mic = canListen() || ph !== "idle";
+    const saying = noteCap === id;
     const box = noteBox?.id === id ? noteBox : null;
     return `<section class="dv-notes" data-drive-notes data-id="${esc(id)}"><h2>Your notes</h2>
       ${ns.length ? `<ul>${ns.slice(0, 3).map((n) => `<li>${esc(n.text)} <small>${esc(n.who)}</small></li>`).join("")}</ul>${ns.length > 3 ? `<small>${ns.length - 3} more on the stop</small>` : ""}` : ""}
-      ${mic ? `<button type="button" class="dv-mic dv-notemic${ph === "listen" ? " on" : ""}" data-drive-notemic aria-pressed="${ph === "listen"}" ${ph === "reading" ? "disabled" : ""}>${ph === "idle" ? icon("mic", 18, "ic l") : ""}${esc(micLabel(ph, note.secs, "Tap and say a note"))}</button>
-      <p class="dv-notelive" aria-live="polite">${ph !== "idle" ? esc(note.live) : ""}</p>` : ""}
-      ${note.id === id && note.error ? `<p class="dv-err" role="alert">${esc(note.error)}</p>` : ""}
+      ${saying ? `<p class="dv-notelive" role="status">Listening for your note: say it now. The bar at the bottom shows what it hears.</p><button type="button" class="dv-link" data-drive-notestop>Cancel the note</button>` : ""}
       ${box ? `<form class="dv-type dv-noteform" data-drive-noteform>
         <label for="drive-note">Add a note on ${esc(name)}</label>
-        <textarea id="drive-note" rows="2" maxlength="${NOTE_MAX}" placeholder="Add a note: the manager is Priya, back Thursdays">${esc(box.text)}</textarea>
+        <textarea id="drive-note" rows="2" maxlength="${NOTE_MAX}" placeholder="Type your note">${esc(box.text)}</textarea>
         <div class="dv-notebtns"><button type="submit" class="dv-mid primary">Save note</button><button type="button" class="dv-mid line" data-drive-notecancel>Cancel</button></div>
-      </form>` : `<button type="button" class="dv-link" data-drive-notetype>${mic ? "Or type a note" : "Add a note"}</button>`}
+      </form>` : saying ? "" : `<div class="dv-notebtns">${hearing() ? `<button type="button" class="dv-mid line" data-drive-notemic>${icon("mic", 18, "ic l")}Say a note</button>` : ""}<button type="button" class="dv-mid line" data-drive-notetype>Type a note</button></div>`}
     </section>`;
   }
   // a redraw of the notes only (a full one under the rep's thumb loses the tap and the scroll)
@@ -306,7 +334,6 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     const sec = $("[data-drive-notes]", el);
     const p = plan();
     if (!sec || !p) return render();
-    holdHands();
     const nbox = $("#drive-note", el);
     if (nbox && noteBox) noteBox.text = nbox.value;
     const id = sec.dataset.id;
@@ -425,29 +452,30 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
       <button type="button" class="dv-mid line" data-drive-quick="someone">${QUICK_TEXT.someone}</button>
       <button type="button" class="dv-mid line" data-drive-quick="no">${QUICK_TEXT.no}</button>
       <button type="button" class="dv-mid line" data-drive-quick="visited">${QUICK_TEXT.visited}</button></div>`;
+    // drivefix (Jard 10-29): no mic of its own here. The bar at the bottom listens for the visit ("Listening: say how
+    // it went"); this sheet says so in one line, and has the taps and an EMPTY box for typing
+    const ear = hearing();
     let body;
     if (s.phase === "read") {
-      body = `<p class="dv-said">${s.text ? `“${esc(s.text)}”` : ""}</p>
+      body = `${s.text ? `<p class="dv-said">You said: “${esc(s.text)}”</p>` : ""}
         <p class="dv-readback" data-drive-readback>${esc(s.result.say)}</p>
         <p class="dv-src">${esc(W.readBy(s.result.source))}</p>
+        ${ear ? `<p class="dv-how" data-drive-how>Say “save”, or say how it went again.</p>` : ""}
         <div class="dv-acts"><button type="button" class="dv-big primary" data-drive-save>${esc(W.save)}</button>
         ${s.alt ? `<button type="button" class="dv-big line" data-drive-fualt>Make it ${esc(altLabel(s.alt, " instead"))}</button>` : ""}
         ${s.noDay ? `<button type="button" class="dv-big line" data-drive-noday>Save with no day yet</button>` : ""}
         ${canSay() ? readBtn("repeat", "dv-big", "Say it again") : ""}
         <button type="button" class="dv-big line" data-drive-again>Change it</button></div>`;
     } else {
-      const listening = s.phase === "listen";
-      const reading = s.phase === "reading";
       body = `${s.ask ? `<p class="dv-readback dv-ask">${esc(s.ask)}</p>` : ""}
-        ${canListen() || listening || reading ? `<button type="button" class="dv-mic${listening ? " on" : ""}" data-drive-mic aria-pressed="${listening}" ${reading ? "disabled" : ""}>${listening || reading ? esc(micLabel(s.phase, sheet.secs, "")) : MIC_HOW}</button>
-        <p class="dv-live" aria-live="polite">${esc(s.live ?? "")}</p>` : s.error ? `<p class="dv-err" role="alert">${esc(s.error)}</p>` : ""}
+        <p class="dv-how" data-drive-how>${ear ? "Say how it went (the bar at the bottom is listening), or tap an answer." : "Tap an answer, or type how it went."}</p>
         ${quick}
         <form class="dv-type" data-drive-form>
-          <label for="drive-text">${canListen() ? "Parked? Or type it" : "How did it go? (park first)"}</label>
-          <textarea id="drive-text" data-drive-text rows="2" maxlength="400" placeholder="done, come back Thu at 3, liked it, hesitant about price">${esc(s.text ?? "")}</textarea>
+          <label for="drive-text">Or type it (park first)</label>
+          <textarea id="drive-text" data-drive-text rows="2" maxlength="400" placeholder="Type how it went">${esc(s.text ?? "")}</textarea>
           <button type="submit" class="dv-mid primary" data-drive-log ${busy ? "disabled" : ""}>${busy ? "Reading…" : "Log it"}</button>
         </form>
-        ${s.error && (canListen() || listening || reading) ? `<p class="dv-err" role="alert">${esc(s.error)}</p>` : ""}`;
+        ${s.error ? `<p class="dv-err" role="alert">${esc(s.error)}</p>` : ""}`;
     }
     return `<div class="dv-sheet" data-drive-sheet role="dialog" aria-modal="true" aria-label="${esc(W.sheetTitle(name))}">
       <div class="dv-sheet-in"><header><h2>${esc(W.sheetTitle(name))}</h2><button type="button" class="dv-x" data-drive-cancel aria-label="Cancel">${icon("close", 18)}</button></header>${body}</div></div>`;
@@ -464,7 +492,7 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
   // ---------- voice ----------
   // read-backs and questions while Voice is on; a failure says so once, on the toast (the button it came from goes).
   // serverFirst (PARITY S15): the Worker's Aura-2 voice first, as the phone reads, so both sound the same; the
-  // browser's own voice when the Worker can't (and in the guided demo, which makes no live calls)
+  // browser's own voice when the Worker can't
   // (the hands-free Agent's ear is paused while Doors reads, so it never hears itself; one toast the first time the
   // Doors voice couldn't read and the browser's own did)
   const say = async (text, onFail) => {
@@ -500,107 +528,52 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     await say(text, (msg) => { toast(msg); });
     if (readKey === key) { readKey = null; drawRead(key, cls, label); }
   }
-  // the hands-free Agent's ear closes while the Log visit sheet or the note mic is up (they use the microphone)
-  function holdHands() {
-    const sheetUp = Boolean(sheet);
-    if (sheetUp !== sheetHeld) { sheetHeld = sheetUp; sheetUp ? hands.pause() : hands.resume(); }
-    const noteUp = note.phase !== "idle";
-    if (noteUp !== noteHeld) { noteHeld = noteUp; noteUp ? hands.pause() : hands.resume(); }
-  }
-  // the browser's speech, else the Worker's (voice.js); what failed says why on the sheet, never a made-up "didn't catch"
-  function listen() {
-    if (!sheet) return;
-    stopListening();
-    hush();
+  // ---------- the one ear (drivefix, Jard 10-29) ----------
+  // Log visit and Say a note borrow the hands-free bar's ear (ui/handsfree.js capture): the bar says what it listens
+  // for, and the words come here instead of going to the Agent. hearing(): the bar can listen now (else the sheet says
+  // tap or type, and the bar says why it can't).
+  const hearing = () => voiceOn && !offline && canListen() && hands.active() && hands.phase() !== "off";
+  // the Log visit sheet has the ear: "say how it went", or on a read-back "say save, or how it went again"
+  function captureVisit() {
+    if (!sheet || sheet.phase === "remove" || sheet.phase === "end") return;
     const id = sheet.id;
-    const mine = () => sheet?.id === id && (sheet.phase === "listen" || sheet.phase === "reading");
-    sheet.phase = "listen";
-    sheet.live = "";
-    sheet.error = null;
-    sheet.secs = 0;
-    render();
-    countSecs(() => (mine() && sheet.phase === "listen" ? sheet : null), () => $("[data-drive-mic]", el));
-    const me = {}; // this listening (onFail may come at once, inside hear(), before it returns)
-    stopRec = null;
-    me.stop = hear({
-      onLive: (t) => {
-        if (!mine()) return;
-        sheet.live = t;
-        const lv = $(".dv-live", el);
-        if (lv) lv.textContent = t;
+    const reading = sheet.phase === "read";
+    hands.capture({
+      prompt: reading ? "Listening: say “save”, or say how it went again" : `Listening: say how it went at ${plan()?.venues?.[id]?.name ?? "this door"}`,
+      onText: (t) => {
+        if (sheet?.id !== id) return;
+        if (sheet.phase === "read" && SAVE_WORDS.test(t.trim())) return save();
+        if (sheet.phase === "read") { sheet.phase = "type"; sheet.result = null; sheet.alt = null; sheet.noDay = null; }
+        return submit(t, { spoken: true });
       },
-      onPhase: (ph) => { if (mine() && sheet.phase !== ph) (sheet.phase = ph), redrawSheet(); },
-      onText: (t) => { me.over = true; if (stopRec === me.stop) stopRec = null; if (mine()) submit(t, { spoken: true }); },
-      onFail: (msg) => { me.over = true; if (stopRec === me.stop) stopRec = null; if (mine()) (sheet.phase = "type"), (sheet.error = msg), redrawSheet(); },
     });
-    if (!me.over) stopRec = me.stop;
   }
-  // a voice change on the open sheet touches only the mic, the label and the error line: a full redraw under a tap on
-  // an answer or Log it lost the tap (drive-cdp, 10-23)
-  function redrawSheet() {
-    if (!$("[data-drive-quick]", el) || !$("#drive-text", el)) return render();
-    const label = $("label[for=drive-text]", el);
-    if (label) label.textContent = canListen() ? "Parked? Or type it" : "How did it go? (park first)";
-    const mic = $("[data-drive-mic]", el);
-    if (mic && !canListen() && sheet.phase === "type") mic.remove(), $(".dv-live", el)?.remove();
-    else if (mic) {
-      const on = sheet.phase === "listen";
-      mic.classList.toggle("on", on);
-      mic.setAttribute("aria-pressed", String(on));
-      mic.disabled = sheet.phase === "reading";
-      if (on || sheet.phase === "reading") mic.textContent = micLabel(sheet.phase, sheet.secs, ""); else mic.innerHTML = MIC_HOW;
-    }
-    let e = $(".dv-sheet .dv-err", el);
-    if (!sheet.error) return void e?.remove();
-    if (!e) (e = document.createElement("p")), (e.className = "dv-err"), e.setAttribute("role", "alert"), $("[data-drive-form]", el)?.after(e);
-    e.textContent = sheet.error;
+  // the sheet closed (saved, cancelled, another door): the Agent has the ear again
+  function stopCapture() {
+    if (noteCap) noteCap = null;
+    hands.release();
   }
-  // stop listening and drop what was heard (cancel, a quick tap, typing)
-  function stopListening() {
-    const s = stopRec;
-    stopRec = null;
-    s?.();
+  // Say a note: the bar listens for the note; what is said is saved at once
+  function listenNote(id) {
+    noteBox = null;
+    noteCap = id;
+    hands.capture({
+      prompt: "Listening: say your note",
+      onText: (t) => {
+        if (noteCap !== id) return;
+        noteCap = null;
+        hands.release();
+        if (!addNote(id, t)) drawNotes();
+      },
+    });
+    drawNotes();
   }
-  // the seconds on a listening mic, as the phone's: who() → the state with .secs while it listens, btn() → the button
-  function countSecs(who, btn) {
-    clearInterval(micT);
-    const t0 = Date.now();
-    micT = setInterval(() => {
-      const w = who();
-      if (!w) return clearInterval(micT);
-      w.secs = Math.floor((Date.now() - t0) / 1000);
-      const b = btn();
-      if (b) b.textContent = micLabel("listen", w.secs, "");
-    }, 1000);
+  function stopNote() {
+    if (!noteCap) return;
+    noteCap = null;
+    hands.release();
   }
 
-  // ---------- a note on the door (PARITY M1) ----------
-  function listenNote(id) {
-    stopNote();
-    stopListening();
-    hush();
-    noteBox = null;
-    note = { id, phase: "listen", secs: 0, live: "", error: null };
-    drawNotes();
-    const mine = () => note.id === id && note.phase !== "idle";
-    countSecs(() => (mine() && note.phase === "listen" ? note : null), () => $("[data-drive-notemic]", el));
-    const me = {};
-    // onLive: the words as the browser hears them (the recording's "Listening…" is on the button already)
-    me.stop = hear({
-      onLive: (t) => { if (!mine() || /^Listening…/.test(t)) return; note.live = t; const lv = $(".dv-notelive", el); if (lv) lv.textContent = t; },
-      onPhase: (ph) => { if (mine() && note.phase !== ph) (note.phase = ph), drawNotes(); },
-      onText: (t) => { me.over = true; if (noteStop === me.stop) noteStop = null; if (!mine()) return; note = { id: null, phase: "idle", secs: 0, live: "", error: null }; if (!addNote(id, t)) drawNotes(); },
-      onFail: (msg) => { me.over = true; if (noteStop === me.stop) noteStop = null; if (mine()) (note = { id, phase: "idle", secs: 0, live: "", error: msg }), drawNotes(); },
-    });
-    if (!me.over) noteStop = me.stop;
-  }
-  // drop the note's listening and what was heard
-  function stopNote() {
-    const s = noteStop;
-    noteStop = null;
-    if (note.phase !== "idle") note = { id: null, phase: "idle", secs: 0, live: "", error: null };
-    s?.();
-  }
   // saved as the stop's notes are (lib/door-notes.js makeNote, by "drive"), with a toast and Undo
   function addNote(id, text) {
     const rec = id ? makeNote({ text, by: "drive" }) : null;
@@ -636,11 +609,10 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     if (!sheet || busy) return;
     const t = String(text ?? "").trim();
     if (!t) { sheet.error = "Say or type how it went."; return render(); }
-    if (isSkip(t)) { sheet = null; return skip(); }
+    if (isSkip(t)) { sheet = null; stopCapture(); return skip(); }
     busy = true;
     sheet.text = t;
     render();
-    if (sheet.phase === "reading" || sheet.phase === "listen") sheet.phase = "type";
     const ctx = ctxFor(sheet.id);
     const r = await logVisit(t, ctx, offline ? { fetch: null } : {}); // r.memory (slot records, CULTURAL-SLOTS §3) is not applied here yet
     busy = false;
@@ -657,6 +629,7 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     ({ r: sheet.result, alt: sheet.alt, noDay: sheet.noDay } = fitHours(r, ctx));
     sheet.ask = null;
     render();
+    captureVisit(); // the bar now listens for "save" (or the visit said again)
     speak(speechOf(sheet.result, ctx));
   }
   function quick(kind) {
@@ -669,6 +642,7 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     sheet.text = "";
     ({ r: sheet.result, alt: sheet.alt, noDay: sheet.noDay } = fitHours({ ok: true, source: "rules", visit: { status: "visited", outcome }, say: `Logged ${ctx.stop.name}: ${sayOutcome(outcome).replace(/\.$/, "")}.${nx ? ` Next: ${nx.name}.` : ""}` }, ctx));
     render();
+    captureVisit();
     speak(speechOf(sheet.result, ctx)); // as the phone: a tapped answer is read back too
   }
   // live check E: on a previewed day (not today) the visit happened on that day, at the stop's slot, so the return
@@ -689,6 +663,7 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     const before = S.snapshot?.() ?? null;
     const prev = { status: plan().statuses?.[id] ?? null, outcome: plan().outcomes?.[id] ?? null };
     sheet = null;
+    stopCapture();
     viewId = null; // as the phone: after a save, back to the current door
     const was = plan();
     let vn = null;
@@ -865,35 +840,29 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     if ("driveDone" in d) {
       const id = $("[data-drive-door]", el)?.dataset.id;
       if (!id) return;
+      hush(); // whatever was being said stops at once: the rep is about to talk
       stopNote();
       noteBox = null;
-      sheet = { id, phase: canListen() ? "listen" : "type", text: "" };
-      if (canListen()) return listen(); // the tap is the gesture the microphone needs
-      return render();
+      sheet = { id, phase: "type", text: "" };
+      render();
+      return captureVisit();
     }
-    if ("driveCancel" in d) { stopListening(); sheet = null; return render(); }
-    if ("driveNotemic" in d) { const id = b.closest("[data-drive-notes]")?.dataset.id; if (!id) return; return note.id === id && note.phase === "listen" ? noteStop?.() : listenNote(id); } // a tap while listening ends it: what was said is saved
-    if ("driveNotetype" in d) { const id = b.closest("[data-drive-notes]")?.dataset.id; if (!id) return; stopNote(); note.error = null; noteBox = { id, text: "" }; drawNotes(); return void $("#drive-note", el)?.focus(); }
+    if ("driveCancel" in d) { sheet = null; stopCapture(); return render(); }
+    if ("drivePrev" in d) return void stepDoor(-1);
+    if ("driveNext" in d) return void stepDoor(1);
+    if ("driveNotemic" in d) { const id = b.closest("[data-drive-notes]")?.dataset.id; if (id) listenNote(id); return; }
+    if ("driveNotestop" in d) { stopNote(); return drawNotes(); }
+    if ("driveNotetype" in d) { const id = b.closest("[data-drive-notes]")?.dataset.id; if (!id) return; stopNote(); noteBox = { id, text: "" }; drawNotes(); return void $("#drive-note", el)?.focus(); }
     if ("driveNotecancel" in d) { noteBox = null; return drawNotes(); }
     if ("navApp" in d) { setNavApp(d.navApp); navPick = false; return render(); }
     if ("driveNavpick" in d) { navPick = true; render(); return void $("[data-nav-app][aria-pressed=true]", el)?.focus(); }
-    if ("driveMic" in d) return sheet?.phase === "listen" ? stopRec?.() : listen(); // a tap while listening ends it: what was said is read
-    if ("driveQuick" in d) { stopListening(); return quick(d.driveQuick); }
+    if ("driveQuick" in d) return quick(d.driveQuick);
     if ("driveSave" in d) return save();
     if ("driveNoday" in d && sheet?.noDay) { sheet.result = sheet.noDay; sheet.noDay = null; return save(); } // judge pass 6 (#2)
     if ("driveFualt" in d && sheet?.alt) { sheet.result = movedDriveResult(sheet.result, plan()?.venues?.[sheet.id], sheet.alt, { next: ctxFor(sheet.id).next[0]?.name ?? "" }); sheet.alt = null; return render(); }
-    if ("driveAgain" in d) { hush(); sheet.phase = canListen() ? "listen" : "type"; sheet.result = null; sheet.alt = null; sheet.noDay = null; return canListen() ? listen() : render(); } // Change it
+    if ("driveAgain" in d) { hush(); sheet.phase = "type"; sheet.result = null; sheet.alt = null; sheet.noDay = null; render(); return captureVisit(); } // Change it
     if ("driveRepeat" in d && sheet?.result) return void readAloud("repeat", "dv-big", "Say it again", speechOf(sheet.result, ctxFor(sheet.id))); // Say it again
     if ("driveStopread" in d) { hush(); const k = readKey; readKey = null; if (k) drawRead(k, k === "read" ? "dv-mid" : "dv-big", k === "read" ? "Read it to me" : "Say it again"); return; }
-    if ("driveVoice" in d) {
-      voiceOn = !voiceOn;
-      try { localStorage.setItem(VOICE_KEY, voiceOn ? "on" : "off"); } catch {}
-      if (!voiceOn) hush(), hands.stop(); // Voice off turns hands-free off too
-      else if (!offline && plan() && dayIndex() >= 0) hands.start(driveQueue(plan(), dayIndex()).current?.id ?? null, { reason: whyNoVoice() }); // Voice on: the Agent listens again (or says why it can't)
-      b.setAttribute("aria-pressed", String(voiceOn));
-      b.innerHTML = voiceHTML(voiceOn);
-      return;
-    }
     if ("driveUndo" in d) { const u = toast.undo; toast.undo = null; $(".dv-toast", el).hidden = true; return u?.(); }
     if ("driveSkip" in d) return skip();
     if ("driveLatedays" in d) return lateRehome("days");
@@ -909,15 +878,6 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     if ("dbUndo" in d) { const u = endUndo; $(".dv-toast", el).hidden = true; toast.undo = null; return u?.(); }
     if ("dbChoose" in d) { choosing = !choosing; return render(); }
     if ("dbRoll" in d) return rollTo(d.dbRoll);
-    // group 3 #8 (Jard 10-24): with Voice on, the Agent is hands-free (ui/handsfree.js): it listens at once, no chat box.
-    // r8hf (Jard 10-28): it never opens the chat box on its own. When it can't listen (Voice off, no microphone in this
-    // browser, the microphone failed) the bar says why and offers Listen / Try again and Type instead; only the guided
-    // demo (no live calls) goes straight to the panel, whose rules answer there.
-    if ("driveAsk" in d) {
-      const id = driveQueue(plan(), dayIndex()).current?.id ?? null;
-      if (offline) return askPanel(id); // the demo: Doors' own rules answer in the panel
-      return hands.start(id, { reason: whyNoVoice() }); // listening, or "Not listening" with the reason (the bar is up already: this listens again)
-    }
     if ("driveLatepick" in d) { latePicking = true; render(); return $("[data-drive-lateby]", el)?.focus(); }
     if ("driveLateby" in d) return setLate(+d.driveLateby || 0); // up to the late line, first on the door (under the sticky header otherwise)
     if ("driveDay" in d) { date = d.driveDay; return render(); }
@@ -929,6 +889,8 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
       if (m) readAloud("read", "dv-mid", "Read it to me", `${m.talk.opener} ${m.talk.toBuyer ? `To the buyer: ${m.talk.toBuyer} ` : ""}${(m.talk.questions ?? []).slice(0, 2).join(" ")} The ask: ${m.talk.ask}.`);
     }
   });
+  // "More about this door" stays as the rep left it (a redraw, the next door)
+  el.addEventListener("toggle", (e) => { if (e.target.matches?.("[data-drive-more]")) moreOpen = e.target.open; }, true);
   el.addEventListener("submit", (e) => {
     if (e.target.matches("[data-drive-noteform]")) {
       e.preventDefault();
@@ -942,36 +904,43 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
     }
     if (!e.target.matches("[data-drive-form]")) return;
     e.preventDefault();
-    stopListening();
     submit($("#drive-text", el)?.value ?? "");
   });
   const onKey = (e) => {
     if (e.key !== "Escape") return;
-    if (!sheet && (noteBox || note.phase !== "idle")) { stopNote(); noteBox = null; return drawNotes(); } // Escape closes the note first
-    if (sheet) { stopListening(); sheet = null; render(); } else close();
+    if (!sheet && (noteBox || noteCap)) { stopNote(); noteBox = null; return drawNotes(); } // Escape closes the note first
+    if (sheet) { sheet = null; stopCapture(); render(); } else close();
   };
   document.addEventListener("keydown", onKey);
   // Doors Agent (spec §6): in drive mode its answer is spoken (Aura-2 first), while Voice is on
   // (hands-free reads its own answers: e.detail.quiet)
   const onAgentReply = (e) => { if (voiceOn && e.detail?.mode === "drive" && e.detail.reply && !e.detail.quiet) sayAgent(e.detail.reply, { onFail: (m) => toast(m) }); };
   const askPanel = (id) => window.dispatchEvent(new CustomEvent("doors:ask", { detail: { id } }));
-  // why the Agent can't listen right now, in the rep's words; null when it can (voice.js whyCantListen names what the
-  // browser lacks: no secure address, no getUserMedia, no AudioContext, offline)
-  const whyNoVoice = () => (!voiceOn ? HF_VOICE_OFF : whyCantListen());
+  // the bar (ui/handsfree.js) is the one place to talk. Its mic is Voice on/off: off by the rep turns Voice off
+  // (remembered on this device), on turns it on. Type: the Log visit box when that sheet is up, else the Agent panel.
+  const setVoice = (on) => { voiceOn = on; try { localStorage.setItem(VOICE_KEY, on ? "on" : "off"); } catch {} };
+  const logSheetUp = () => Boolean(sheet && sheet.phase !== "remove" && sheet.phase !== "end");
   const hands = mountHandsFree({
-    onType: () => askPanel(driveQueue(plan(), dayIndex()).current?.id ?? null),
-    // Listen / Try again on the bar: Voice off turns on first (the rep asked to be heard); the demo has no voice
-    onListen: () => {
-      if (offline) return false;
-      if (!voiceOn) {
-        voiceOn = true;
-        try { localStorage.setItem(VOICE_KEY, "on"); } catch {}
-        const b = $("[data-drive-voice]", el);
-        if (b) { b.setAttribute("aria-pressed", "true"); b.innerHTML = voiceHTML(true); }
-      }
-      return true;
+    onType: () => {
+      if (!logSheetUp()) return askPanel(driveQueue(plan(), dayIndex()).current?.id ?? null);
+      if (sheet.phase === "read") $("[data-drive-again]", el)?.click();
+      $("#drive-text", el)?.focus();
     },
+    onMore: () => askPanel(driveQueue(plan(), dayIndex()).current?.id ?? null),
+    onListen: () => { if (offline) return false; if (!voiceOn) setVoice(true); return true; },
+    onMute: () => { setVoice(false); hush(); },
+    onPhase: () => refreshEar(),
   });
+  // what the sheet and the notes say about talking follows the bar (it went off, or came on)
+  let earShown = null;
+  function refreshEar() {
+    const now2 = hearing();
+    if (now2 === earShown) return;
+    earShown = now2;
+    const how = $("[data-drive-how]", el);
+    if (how && sheet) how.textContent = sheet.phase === "read" ? (now2 ? "Say “save”, or say how it went again." : "") : now2 ? "Say how it went (the bar at the bottom is listening), or tap an answer." : "Tap an answer, or type how it went.";
+    if (!sheet && $("[data-drive-notes]", el)) drawNotes();
+  }
   window.addEventListener("doors:agent-reply", onAgentReply);
   // ease audit 2 #3: the Agent's "I'm running late" (+15 min…): the same as this screen's Running late picks
   const onLate = (e) => { const b = +e.detail?.by || 0; if (b > 0) setLate(b); };
@@ -982,14 +951,58 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
   let lateShown = "";
   const tick = setInterval(() => { if (!sheet && !busy && lateNow() !== lateShown) render(); }, 30000);
 
-  function close({ quiet = false } = {}) {
+  // ---------- Back (drivefix, Jard 10-29: "i try to go back and i exit driving mode") ----------
+  // Drive mode keeps one history entry of its own on top (the plan's &drive=1 entry is under it). The browser's Back
+  // (a phone's swipe too) pops it, and drive mode takes the Back itself: a sheet or the typed note closes, the All
+  // stops list goes back to the door, else the door before the one on screen. At the first door it says so, and only a
+  // second Back within a few seconds leaves (to the plan, the day keeping its place). The × / Pause leaves at once,
+  // taking the entry with it. Not in the guided demo (its address stays #/demo, no panels in it).
+  let guard = false; // our entry is in the history
+  let leaving = null; // close() went back over our entry: {quiet}, finished on the pop
+  let backAsked = 0;
+  function armBack() {
+    if (guard || !/[?&]drive=1(&|$)/.test(location.hash + "&" + location.search.slice(1))) return;
+    try { history.pushState({ doorsDrive: true }, "", location.href); guard = true; } catch {}
+  }
+  const onPop = () => {
+    if (history.state?.doorsDrive || history.state?.doorsAgent) return; // back onto our entry (the Agent panel closed over it)
+    if (!guard) return;
+    guard = false;
+    if (leaving) return finish(leaving);
+    if (logSheetUp() || sheet) { sheet = null; stopCapture(); render(); }
+    else if (noteBox || noteCap) { stopNote(); noteBox = null; drawNotes(); }
+    else if (screen === "day") { screen = "door"; viewId = null; render(); }
+    else if (!stepDoor(-1)) {
+      if (Date.now() - backAsked < 6000) return finish({});
+      backAsked = Date.now();
+      toast("This is the first door. Go back again to leave drive mode: your day keeps its place.");
+    }
+    armBack();
+  };
+  window.addEventListener("popstate", onPop);
+  setTimeout(armBack, 0); // after the plan has put &drive=1 in the address (plan.js startDrive → syncUrl)
+
+  function close(opts = {}) {
+    if (leaving) return;
+    if (guard && history.state?.doorsDrive) {
+      leaving = opts;
+      try { history.back(); } catch { return finish(opts); }
+      return void setTimeout(() => { if (leaving) finish(leaving); }, 600); // a browser that never pops
+    }
+    finish(opts);
+  }
+  let closed = false;
+  function finish({ quiet = false } = {}) {
+    if (closed) return;
+    closed = true;
+    leaving = null;
+    guard = false;
+    window.removeEventListener("popstate", onPop);
     // Pause (item 5): today's drive keeps its place; the plan's button says Resume my day
     const p = plan();
     const k = p ? dayIndex() : -1;
     if (k >= 0 && date === now().date && !driveQueue(p, k).finished && !rec().ended && S.can("setDrive")) S.setDrive(date, { paused: stamp() });
-    stopListening();
     stopNote();
-    clearInterval(micT);
     hush();
     off();
     clearInterval(tick);
@@ -1013,8 +1026,9 @@ export function openDrive({ now, onClose = () => {}, by = 0, resume = false }) {
   if (resume && canResume()) resumeDay();
   // Jard 10-28: always hands-free in drive mode. Voice on: the Agent's bar is up and listening from the start (Start my
   // day's tap is the gesture the microphone needs); when this browser can't listen the bar is up anyway and says why
-  // (r8hf: never a silent fall-back to the chat box). Not with Voice off, and not in the guided demo (no live calls).
-  if (voiceOn && !offline && plan() && dayIndex() >= 0) hands.start(driveQueue(plan(), dayIndex()).current?.id ?? null, { reason: whyCantListen() });
+  // (r8hf: never a silent fall-back to the chat box). Not offline. drivefix: Voice off still shows the bar, "Mic off".
+  // drivefix: the bar is up whenever there is a day to drive (Voice off: "Mic off: tap to turn it on")
+  if (!offline && plan() && dayIndex() >= 0) hands.start(driveQueue(plan(), dayIndex()).current?.id ?? null, voiceOn ? { reason: whyCantListen() } : { muted: true });
   // the day's record: started the first time today is opened; a paused day says where it picks up
   {
     const p = plan();

@@ -1,8 +1,8 @@
 // r8hf (Jard 10-28, Brave on iPhone: the drive Agent opened the chat box, no bar, no mic prompt): prove in a real
 // browser over CDP that the hands-free Agent never falls back to typing without a word. One Chromium per scenario, a
 // saved Tidewell plan whose first window is today, drive mode at 390×844 with an iPhone UA (or 1400×900):
-//   nomic      no getUserMedia and no SpeechRecognition (a browser that can't listen): the bar is up at open, "Not
-//              listening" + the reason; Agent shows the bar, not the panel; Type instead opens the panel; ?voicedebug=1
+//   nomic      no getUserMedia and no SpeechRecognition (a browser that can't listen): the bar is up at open, "Mic
+//              off" + the reason; the mic tries again, never the panel; Type opens the panel; ?voicedebug=1
 //   blocked    getUserMedia → NotAllowedError: "microphone is blocked"; Try again asks again; granted → listening → the
 //              page's own recording (Chromium's fake device plays a tone file) → the Worker (stubbed) → the Agent → spoken
 //   busy       getUserMedia → NotReadableError: "in use by another app"; Try again works
@@ -10,7 +10,7 @@
 //              the tap resumes and it listens
 //   serveroff  /api/voice/listen 503 and no recognizer: "Doors voice is off on this server", no spin, Try again
 //   unreach    /api/voice/listen fails (network): "Couldn't reach the Doors voice", Try again
-//   voiceoff   Voice off remembered: no bar at open; Agent → the bar "Voice is off", not the panel; Listen → Voice on, listening
+//   voiceoff   Voice off remembered: the bar at open says "Mic off: tap to turn it on"; the mic → Voice on, listening
 //   desktop    1400 px, everything present: listen → think → speak → listen, audioSession auto while the mic is open,
 //              playback after
 // No model, no Qloo, no spend. Usage: node scripts/r8hf-cdp.mjs <base-url> <out-dir> [scenario|all]   (prints JSON)
@@ -93,7 +93,7 @@ async function session(name, { w = 390, h = 844, ua = IPHONE_UA, init = "", voic
   };
   const checks = [];
   const check = (n, ok, got) => { checks.push({ name: n, ok: !!ok, got }); if (!ok) console.error(`FAIL ${name}: ${n}: ${JSON.stringify(got)}`); };
-  const hf = () => ev(`(() => { const h = document.querySelector(".hf"); if (!h) return null; const r = h.getBoundingClientRect(); return { hidden: h.hidden, phase: h.dataset.phase, head: h.querySelector("[data-hf-head]").textContent, hint: h.querySelector("[data-hf-hint]").textContent, note: h.querySelector("[data-hf-note]").textContent, words: h.querySelector("[data-hf-words]").textContent, answer: h.querySelector("[data-hf-answer]").textContent, debug: h.querySelector("[data-hf-debug]").hidden ? null : h.querySelector("[data-hf-debug]").textContent, mute: h.querySelector("[data-hf-mute]").textContent, onScreen: !h.hidden && r.top >= 0 && r.bottom <= innerHeight + 1 && r.height > 60 }; })()`);
+  const hf = () => ev(`(() => { const h = document.querySelector(".hf"); if (!h) return null; const r = h.getBoundingClientRect(); return { hidden: h.hidden, phase: h.dataset.phase, head: h.querySelector("[data-hf-status]").textContent, note: h.querySelector("[data-hf-note]").textContent, words: h.querySelector("[data-hf-words]").textContent, answer: h.querySelector("[data-hf-answer]").textContent, debug: h.querySelector("[data-hf-debug]").hidden ? null : h.querySelector("[data-hf-debug]").textContent, mute: /^(muted|off)$/.test(h.dataset.phase) ? "Mic off" : "on", onScreen: !h.hidden && r.top >= 0 && r.bottom <= innerHeight + 1 && r.height > 60 }; })()`);
   const panelOpen = () => ev(`!!document.querySelector("#agentPanel") && !document.querySelector("#agentPanel").hidden`);
   const waitFor = async (expr, ms = 15000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await ev(expr)) return true; await sleep(100); } await shot("zz-timeout"); throw new Error(`${name}: timed out: ${expr}\n${problems.join("\n")}\nhf ${JSON.stringify(await hf())}`); };
   await send("Runtime.enable"); await send("Page.enable");
@@ -131,16 +131,16 @@ const scenarios = {
       await sleep(600);
       let h = await s.hf();
       await s.shot("1-open");
-      s.check("the bar is up at open, Not listening, on screen", h && !h.hidden && h.phase === "off" && h.onScreen, h);
+      s.check("the bar is up at open, Mic off, on screen", h && !h.hidden && h.phase === "off" && h.onScreen, h);
       s.check("the reason names what is missing (no getUserMedia)", /can't record from the microphone/.test(h?.note ?? ""), h?.note);
-      s.check("Listen and Type instead are the way on", h?.mute === "Listen", h?.mute);
+      s.check("the status says Mic off: tap to try again (Type is beside it)", h?.head === "Mic off: tap to try again" && await s.ev(`!!document.querySelector("[data-hf-type]")`), h?.head);
       s.check("the voicedebug line is on (rec false, gum false)", /rec false · gum false/.test(h?.debug ?? ""), h?.debug);
       s.check("no chat box", !(await s.panelOpen()), null);
-      await s.click("[data-drive-ask]");
+      await s.click("[data-hf-big]");
       await sleep(400);
       h = await s.hf();
-      await s.shot("2-agent-tap");
-      s.check("Agent: the bar (with the reason), not the panel", h?.phase === "off" && !(await s.panelOpen()) && /can't record/.test(h?.note), { h, panel: await s.panelOpen() });
+      await s.shot("2-mic-tap");
+      s.check("the mic: tries again, still off with the reason, not the panel", h?.phase === "off" && !(await s.panelOpen()) && /can't record/.test(h?.note), { h, panel: await s.panelOpen() });
       await s.click("[data-hf-type]");
       await sleep(500);
       await s.shot("3-type-instead");
@@ -160,10 +160,10 @@ const scenarios = {
       s.check("getUserMedia was asked at open, inside the tap", (await s.ev("window.__gum")) === 1, await s.ev("window.__gum"));
       s.check("the debug line carries the failure", /last fail NotAllowedError/.test(h?.debug ?? ""), h?.debug);
       s.check("no chat box", !(await s.panelOpen()), null);
-      await s.click("[data-drive-ask]");
+      await s.click("[data-hf-big]");
       await sleep(400);
       h = await s.hf();
-      s.check("Agent while blocked: asks again (not the panel)", (await s.ev("window.__gum")) === 2 && !(await s.panelOpen()) && h?.phase === "off", { gum: await s.ev("window.__gum"), h });
+      s.check("the mic while blocked: asks again (not the panel)", (await s.ev("window.__gum")) === 2 && !(await s.panelOpen()) && h?.phase === "off", { gum: await s.ev("window.__gum"), h });
       // granted now: the circle = Try again → listening → the tone is speech → the Worker → the Agent → spoken
       await s.ev(`window.__deny = null`);
       await s.click("[data-hf-big]");
@@ -175,7 +175,7 @@ const scenarios = {
       await s.waitFor(`document.querySelector(".hf")?.dataset.phase === "speak"`, 15000);
       h = await s.hf();
       await s.shot("3-speaking");
-      s.check("you said = the Worker's words; the answer is on screen", /tell me about my next stop/.test(h.words) && h.answer === REPLY, { words: h.words, answer: h.answer });
+      s.check("the Worker's words went to the Agent; the answer is on screen", /tell me about my next stop/.test(s.agentBodies[0]?.messages?.at(-1)?.text ?? "") && h.answer === REPLY, { sent: s.agentBodies[0]?.messages?.at(-1), answer: h.answer });
       s.check("the turn went to /api/agent in drive mode", s.agentBodies[0]?.context?.mode === "drive", s.agentBodies[0]?.context?.mode);
       s.check("phases: (listen,) off → listen → reading/think → speak (the first listen lasts until the refusal lands)", /^(listen,)?off,(listen,off,)*listen,(reading,)?think,speak/.test(await s.ev("window.__phases.join()")), await s.ev("window.__phases"));
       s.check("no page errors", !s.problems.length, s.problems);
@@ -190,9 +190,9 @@ const scenarios = {
       await s.shot("1-busy");
       s.check("busy: 'in use by another app'", /in use by another app/.test(h?.note ?? ""), h?.note);
       await s.ev(`window.__deny = null`);
-      await s.click("[data-hf-mute]"); // says Listen in off
+      await s.click("[data-hf-big]"); // Mic off: tap to try again
       await s.waitFor(`document.querySelector(".hf")?.dataset.phase === "listen"`, 4000);
-      s.check("Listen: listening again", true, null);
+      s.check("the mic: listening again", true, null);
       s.check("no page errors", !s.problems.length, s.problems);
     } finally { s.cleanup(); }
     return s.checks;
@@ -235,7 +235,7 @@ const scenarios = {
       const h = await s.hf();
       await s.shot("1-unreach");
       s.check("the network failed: 'Couldn't reach the Doors voice'", /Couldn't reach the Doors voice/.test(h?.note ?? ""), h?.note);
-      s.check("Listen offered", h?.mute === "Listen", h?.mute);
+      s.check("Mic off: tap to try again", h?.head === "Mic off: tap to try again", h?.head);
     } finally { s.cleanup(); }
     return s.checks;
   },
@@ -243,16 +243,13 @@ const scenarios = {
     const s = await session("voiceoff", { voice: "off" });
     try {
       await sleep(600);
-      s.check("Voice off: no bar at open", !(await s.hf()) || (await s.hf()).hidden, await s.hf());
-      await s.click("[data-drive-ask]");
-      await sleep(400);
       const h = await s.hf();
-      await s.shot("1-agent-voiceoff");
-      s.check("Agent: the bar says Voice is off (not the panel)", h?.phase === "off" && /Voice is off/.test(h.note) && !(await s.panelOpen()), { h, panel: await s.panelOpen() });
-      await s.click("[data-hf-mute]"); // Listen
+      await s.shot("1-voiceoff");
+      s.check("Voice off: the bar is up, Mic off: tap to turn it on (no chat box)", h && !h.hidden && h.phase === "muted" && h.head === "Mic off: tap to turn it on" && !(await s.panelOpen()), h);
+      await s.click("[data-hf-big]");
       await s.waitFor(`document.querySelector(".hf")?.dataset.phase === "listen"`, 4000);
-      await s.shot("2-listen-turns-voice-on");
-      s.check("Listen: Voice on and listening", (await s.ev(`document.querySelector("[data-drive-voice]").getAttribute("aria-pressed")`)) === "true" && (await s.ev(`localStorage.getItem("doors:drive-voice")`)) === "on", await s.ev(`document.querySelector("[data-drive-voice]").outerHTML`));
+      await s.shot("2-mic-turns-voice-on");
+      s.check("the mic: Voice on (remembered) and listening", (await s.ev(`localStorage.getItem("doors:drive-voice")`)) === "on", await s.ev(`localStorage.getItem("doors:drive-voice")`));
       s.check("no page errors", !s.problems.length, s.problems);
     } finally { s.cleanup(); }
     return s.checks;

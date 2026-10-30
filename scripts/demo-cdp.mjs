@@ -1,11 +1,15 @@
 // Prove the guided demo end to end in headless Chromium (real time, over CDP), driven like a visitor: Continue on
 // each card, real mouse clicks on the app for the click steps (Build my plan, Week, the #1 stop, Mark visited, Save
-// outcome). Screenshots every step, prints any console error or tour error, and window.__demo (steps, blocked /api).
+// outcome). Screenshots every step, prints any console error or tour error, and window.__demo (steps, blocked /api; only Agent and voice go out).
 // Usage: node scripts/demo-cdp.mjs <base-url> <out-dir> [width] [height] [normal|chaos|close]
 //   chaos: clicks around mid-tour (form fields, day tabs); close: closes the tour on the form and builds by hand.
+// The tour's live calls (Doors Agent, the Aura voice: ui/demo.js DEMO_LIVE) are answered here over CDP, free: the Agent
+// by Doors' rules (lib/agent-rules.js) on the turn the page sent, log-visit and voice with a 503 (the page's own
+// fallbacks: the rules parser, the browser's voice). LIVE=1 lets them reach the server (a paid model turn on a live site).
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import { STEPS } from "../public/lib/demo-script.js";
+import { answerByRules } from "../public/lib/agent-rules.js";
 const [base, out, w = "1400", h = "900", mode = "normal"] = process.argv.slice(2);
 fs.mkdirSync(out, { recursive: true });
 const port = 9400 + Math.floor(Math.random() * 400);
@@ -22,6 +26,7 @@ await new Promise((r) => ws.addEventListener("open", r));
 let id = 0; const pend = new Map(); const problems = [];
 const net = []; // every same-origin /api/ request that reached the network (the demo's fetch guard never lets one out; an <audio> or a stray module could)
 ws.addEventListener("message", (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); }
+  if (m.method === "Fetch.requestPaused") stub(m.params);
   if (m.method === "Network.requestWillBeSent") { try { const u = new URL(m.params.request.url); if (u.origin === new URL(base).origin && u.pathname.startsWith("/api/")) net.push(u.pathname); } catch {} }
   if (m.method === "Runtime.consoleAPICalled" && /error|warn/.test(m.params.type)) { const t = m.params.args.map((a) => a.value ?? a.description).join(" ").slice(0, 300); if (!/refused \/api/.test(t)) { problems.push("console." + m.params.type + " " + t); } }
   if (m.method === "Runtime.exceptionThrown") problems.push("exception " + (m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text).slice(0, 300)); });
@@ -36,7 +41,20 @@ const clickAt = async (sel) => {
   for (const type of ["mouseMoved", "mousePressed", "mouseReleased"]) await send("Input.dispatchMouseEvent", { type, x: r2.x, y: r2.y, button: "left", clickCount: 1 });
   return true;
 };
+const b64 = (o) => Buffer.from(typeof o === "string" ? o : JSON.stringify(o)).toString("base64");
+const JSONH = [{ name: "content-type", value: "application/json" }];
+function stub({ requestId, request }) {
+  const path = new URL(request.url).pathname;
+  let body = null;
+  try { body = JSON.parse(request.postData ?? "null"); } catch {}
+  if (path === "/api/agent" && body?.context) {
+    const r = { ...answerByRules(body.messages ?? [], body.context, { now: `${body.context.today}T${body.context.now}` }), by: "rules", stub: true };
+    return send("Fetch.fulfillRequest", { requestId, responseCode: 200, responseHeaders: JSONH, body: b64(r) });
+  }
+  return send("Fetch.fulfillRequest", { requestId, responseCode: 503, responseHeaders: JSONH, body: b64({ error: "stubbed by demo-cdp" }) });
+}
 await send("Runtime.enable"); await send("Page.enable"); await send("Network.enable");
+if (!process.env.LIVE) await send("Fetch.enable", { patterns: ["/api/agent", "/api/agent/log-visit", "/api/agent/debrief", "/api/voice/say", "/api/voice/listen"].map((p) => ({ urlPattern: `*${p}`, requestStage: "Request" })) });
 await send("Emulation.setDeviceMetricsOverride", { width: +w, height: +h, deviceScaleFactor: 1, mobile: +w < 700 });
 await send("Page.navigate", { url: `${base}/app#/demo` });
 await sleep(2500);
@@ -88,6 +106,13 @@ while (Date.now() - t0 < 180000) {
 }
 const fin = { ...(await ev(`({ agent: window.__demo?.agent ?? 0, blocked: window.__demo?.blocked, steps: window.__demo?.steps.map(s=>s.key).join(","), done: !!window.__demo?.done, hash: location.hash })`)), net };
 console.log("final", JSON.stringify(fin));
+// Jard 10-29: the tour reaches the network only for Doors Agent and the Aura voice (ui/demo.js DEMO_LIVE); the plan
+// is baked, so no Qloo, ORS or plan-building call. The askwhy and shorter cards are live Agent turns.
+const LIVE = new Set(["/api/agent", "/api/agent/log-visit", "/api/agent/debrief", "/api/voice/say", "/api/voice/listen"]);
+const stray = (fin.net ?? []).filter((x) => !LIVE.has(x));
+if (stray.length) problems.push(`the tour reached /api beyond Agent and voice: ${[...new Set(stray)].join(", ")}`);
+if ((fin.blocked ?? []).some((x) => LIVE.has(x))) problems.push(`the tour refused a live call: ${fin.blocked.join(", ")}`);
+if (mode === "normal" && !(fin.net ?? []).includes("/api/agent")) problems.push("the tour's Agent cards never reached /api/agent");
 // a tour that skipped ahead (seen once under load: straight to the end) is a failure, not "problems none": every step of
 // the script must have shown (the close mode stops at the pitch on purpose)
 if (mode !== "close") {

@@ -56,7 +56,7 @@ export const STEPS = [
     key: "askwhy", phase: "plan", act: "click", title: "Ask Doors Agent why", cta: "Click Send",
     body: [
       "Maya's question is typed in: Nomadic Beerworks is #1, so why isn't it her first stop?",
-      "In the demo, Doors' rules answer with no model call. Live, Claude answers first.",
+      "Doors Agent answers live, from her plan and Qloo's data.",
     ],
   },
   {
@@ -117,13 +117,16 @@ export const STEPS = [
   // ---------- owner review 9 ----------
   {
     key: "drive", phase: "plan", act: "click", title: "In the car", cta: "Click Start my day",
-    body: ["Back to Tuesday, after Nomadic. On the road the plan is one door at a time: who, why, what to say, and Navigate."],
+    body: [
+      "Back to Tuesday, after Nomadic. On the road the plan is one door at a time: who, why, what to say, and Navigate.",
+      "Doors Agent listens at the bottom: ask it out loud.",
+    ],
   },
   {
     key: "done", phase: "plan", act: "click", title: "Log visit by voice", cta: "Click Log visit",
     body: [
       "Her next door is {door}. One big button: she says how it went, nothing to type.",
-      "The demo types it for her.",
+      "The demo types it for her. You can say it instead.",
     ],
   },
   {

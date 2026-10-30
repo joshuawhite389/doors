@@ -15,9 +15,6 @@ html.driving,html.driving body{overflow:hidden}
 .dv-day b{display:block;font:700 20px/1.2 "Inter Tight",Inter,sans-serif}
 .dv-day span{color:var(--dv-ink2);font-size:15px}
 .dv-day .dv-ahead{display:block;color:var(--dv-ink2);font-size:14px;line-height:1.35;margin:2px 0}
-.dv-dots{display:flex;gap:6px;flex-wrap:wrap}
-.dv-dots i{width:22px;height:6px;border-radius:3px;background:var(--dv-line)}
-.dv-dots i.on{background:var(--dv-go)} .dv-dots i.cur{background:var(--dv-ink)}
 .dv-door{padding-top:18px}
 .dv-kick{margin:0 0 6px;color:var(--dv-ink2);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em}
 .dv-name{font-size:clamp(34px,9vw,48px);line-height:1.05;font-weight:800;overflow-wrap:anywhere}
@@ -95,10 +92,7 @@ html.driving,html.driving body{overflow:hidden}
 .dv-notes ul{margin:0;padding:0 0 0 18px}
 .dv-notes li{margin:2px 0;overflow-wrap:anywhere}
 .dv-notes small{color:var(--dv-ink3);font-size:12.5px}
-/* always on screen, clear of Done at the bottom */
-.dv-askfab{position:fixed;top:calc(env(safe-area-inset-top) + 18px);right:calc(env(safe-area-inset-right) + 24px);z-index:5;min-height:48px;padding:0 18px;border-radius:999px;border:2px solid var(--dv-go);background:#1E3328;color:#CFEFDB;font:700 15px Inter,system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);cursor:pointer}
 /* the page's side gutter (Jard 2026-10-23: it sat too close to the right edge): 24px, 16px on a phone */
-@media (max-width:700px){.dv-top{padding-right:136px}.dv-askfab{right:calc(env(safe-area-inset-right) + 16px)}}
 /* Voice on/off (the phone's switch): read-backs spoken or not */
 .dv-voice{grid-column:2;justify-self:start;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--dv-line);background:var(--dv-card);color:var(--dv-ink);font:600 14px Inter,system-ui,sans-serif;cursor:pointer}
 .dv-voice[aria-pressed="false"]{color:var(--dv-ink2)}
@@ -197,12 +191,9 @@ a.dv-chip{display:inline-flex;align-items:center;text-decoration:none}
   .dv-day b.dv-line{font-size:17px}
   .dv-day .dv-ahead.dv-line{font-size:13px;margin:0}
   .dv-day{grid-column:2/-1}
-  .dv-dots{grid-column:1/-1;grid-row:2;flex-wrap:nowrap;gap:4px}
-  .dv-dots i{flex:1 1 0;width:auto;min-width:4px;max-width:22px}
   /* the day's buttons and Agent share the row under the dots (Agent beside the title cut it to "Tue Oct 27 · 0 of …") */
   .dv-tabs{grid-column:1/3;grid-row:3;margin-right:0;gap:6px}
   .dv-tabs .dv-voice{min-height:44px;padding:0 10px}
-  .dv-askfab{position:static;grid-column:3;grid-row:3;align-self:start;min-height:44px;padding:0 12px;font-size:14px;box-shadow:none}
   .dv-door{padding-top:10px}
   .dv-kick{font-size:13px;margin-bottom:2px}
   .dv-name{font-size:28px}
@@ -221,49 +212,97 @@ a.dv-chip{display:inline-flex;align-items:center;text-decoration:none}
 @media (max-width:360px){.dv-askfor{font-size:13px;margin-bottom:6px !important}.dv-askfor span{font-size:11px;letter-spacing:.04em;margin-right:2px}
   .dv-addr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 
-/* group 3 #8: the hands-free Agent (ui/handsfree.js): one big state, the answer in large type, no chat box */
-/* the hands-free Agent (ui/handsfree.js): a bar docked under the drive screen, always on while Voice is on */
-:root{--hf-h:168px}
+/* the hands-free Agent (ui/handsfree.js), drivefix (Jard 10-29: the bar took a quarter of the screen): one compact row
+   docked under the drive screen — the mic, one status line, the answer in two lines at most (More), Type. Its height
+   is measured (--hf-h, set by the bar), so the drive screen and its sheet always end just above it. */
+:root{--hf-h:76px}
 html.hf-open .drive{bottom:var(--hf-h)}
 html.hf-open .dv-toast{bottom:calc(var(--hf-h) + 12px)}
-/* the Log visit sheet and the chat panel sit over the whole viewport: above the bar, never under it (a Log it under the
-   bar took the tap for the bar: drive-cdp, 10-28) */
+/* the Log visit sheet and the chat panel sit above the bar, never under it (the bar says what it is listening for) */
 html.hf-open .dv-sheet{bottom:var(--hf-h)}
-html.hf-open .dv-sheet-in{max-height:calc(100vh - var(--hf-h))}
+html.hf-open .dv-sheet-in{max-height:calc(100vh - var(--hf-h) - 8px)}
 html.hf-open.driving .agentpanel{bottom:calc(var(--hf-h) + 12px);height:min(620px,calc(100vh - var(--hf-h) - 24px))}
-.hf{position:fixed;left:0;right:0;bottom:0;height:var(--hf-h);z-index:1200;background:#0B100E;color:#F3F1EC;border-top:1px solid #2B3833;padding:12px max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
+.hf{position:fixed;left:0;right:0;bottom:0;z-index:1200;background:#0B100E;color:#F3F1EC;border-top:1px solid #2B3833;padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
 .hf[hidden]{display:none}
-.hf-in{max-width:640px;margin:0 auto;height:100%;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:8px 14px;align-items:start}
-.hf-big{grid-row:1/3;width:96px;height:96px;border-radius:50%;border:3px solid #3C8D5A;background:#1E3328;color:#F3F1EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font:700 13px/1.15 Inter,system-ui,sans-serif;padding:8px;text-align:center;align-self:center}
-.hf-big:focus-visible{outline:3px solid #CFEFDB;outline-offset:4px}
-.hf-dot{width:18px;height:18px;border-radius:50%;background:#3C8D5A}
-.hf[data-phase="listen"] .hf-big,.hf[data-phase="reading"] .hf-big{border-color:#6FD394;box-shadow:0 0 0 0 rgba(111,211,148,.5);animation:hf-pulse 1.6s ease-out infinite}
-.hf[data-phase="listen"] .hf-dot{background:#6FD394}
+.hf-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.hf-big{position:relative;width:56px;height:56px;border-radius:50%;border:2px solid #3C8D5A;background:#1E3328;color:#F3F1EC;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.hf-big:focus-visible{outline:3px solid #CFEFDB;outline-offset:3px}
+.hf-dot{display:none}
+.hf[data-phase="listen"] .hf-big,.hf[data-phase="reading"] .hf-big{border-color:#6FD394;background:#2F7D4F;box-shadow:0 0 0 0 rgba(111,211,148,.5);animation:hf-pulse 1.6s ease-out infinite}
 .hf[data-phase="think"] .hf-big{border-color:#B9C2BE;background:#18211E}
-.hf[data-phase="think"] .hf-dot{background:#B9C2BE;animation:hf-blink 1s ease-in-out infinite}
-.hf[data-phase="speak"] .hf-big{border-color:#F3F1EC}
-.hf[data-phase="speak"] .hf-dot{background:#F3F1EC;animation:hf-blink 1.2s ease-in-out infinite}
-.hf[data-phase="muted"] .hf-big,.hf[data-phase="off"] .hf-big,.hf[data-phase="paused"] .hf-big{border-color:#2B3833;background:#18211E}
-.hf[data-phase="muted"] .hf-dot,.hf[data-phase="off"] .hf-dot,.hf[data-phase="paused"] .hf-dot{background:#7F8A86}
-@keyframes hf-pulse{to{box-shadow:0 0 0 14px rgba(111,211,148,0)}}
+.hf[data-phase="think"] .hf-big svg{animation:hf-blink 1s ease-in-out infinite}
+.hf[data-phase="speak"] .hf-big,.hf[data-phase="paused"] .hf-big{border-color:#F3F1EC;background:#18211E}
+/* mic off: a grey mic with a line through it */
+.hf[data-phase="muted"] .hf-big,.hf[data-phase="off"] .hf-big{border-color:#4A5652;background:#18211E;color:#7F8A86}
+.hf[data-phase="muted"] .hf-big::after,.hf[data-phase="off"] .hf-big::after{content:"";position:absolute;width:30px;height:2.5px;border-radius:2px;background:currentColor;transform:rotate(-45deg)}
+@keyframes hf-pulse{to{box-shadow:0 0 0 10px rgba(111,211,148,0)}}
 @keyframes hf-blink{50%{opacity:.35}}
-@media (prefers-reduced-motion:reduce){.hf-big,.hf-dot{animation:none!important}}
-.hf-text{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;align-self:stretch}
-.hf-hint{margin:0;color:#B9C2BE;font-size:15px;line-height:1.35}
-.hf-hint:empty{display:none}
-.hf-words{margin:0;color:#B9C2BE;font-size:14px;line-height:1.35}
-.hf-words span{color:#7F8A86;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+@media (prefers-reduced-motion:reduce){.hf-big,.hf-big svg{animation:none!important}}
+.hf-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+.hf-status{margin:0;font:600 15px/1.3 Inter,system-ui,sans-serif;color:#F3F1EC}
+.hf[data-phase="listen"] .hf-status,.hf[data-phase="reading"] .hf-status{color:#9BE3B5}
+.hf[data-phase="muted"] .hf-status,.hf[data-phase="off"] .hf-status{color:#B9C2BE}
+.hf[data-capture][data-phase="listen"] .hf-status{color:#CFEFDB}
+.hf-words{margin:0;color:#B9C2BE;font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.hf-words span{color:#7F8A86;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:4px}
 .hf-words:empty{display:none}
-.hf-answer{margin:0;font-size:17px;line-height:1.4}
+/* the Agent's answer: two lines at most; More opens the full Agent */
+.hf-answer{margin:0;font-size:14px;line-height:1.35;color:#DDE3E0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hf-answer:empty{display:none}
-.hf-note{margin:0;color:#FFC48F;font-size:14px}
-.hf-why{margin:0;color:#B9C2BE;font-size:14px;line-height:1.35}
-.hf-why[hidden],.hf-debug[hidden]{display:none}
+.hf-note{margin:0;color:#FFC48F;font-size:13px;line-height:1.3}
+.hf-note[hidden],.hf-debug[hidden]{display:none}
 .hf-debug{margin:0;color:#7F8A86;font:11px/1.3 ui-monospace,Menlo,monospace;word-break:break-word;user-select:all}
-.hf-row{grid-column:2;display:flex;gap:8px;flex-wrap:wrap}
-.hf-btn{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #2B3833;background:#18211E;color:#F3F1EC;font:600 15px Inter,system-ui,sans-serif;cursor:pointer}
-.hf-btn[aria-pressed="true"]{background:#F3F1EC;color:#0B100E;border-color:#F3F1EC}
-@media (min-width:700px){:root{--hf-h:150px}.hf-big{width:104px;height:104px;font-size:14px}.hf-answer{font-size:18px}}
+.hf-more{align-self:flex-start;background:none;border:0;padding:2px 0;min-height:28px;color:#9BE3B5;font:600 14px Inter,system-ui,sans-serif;text-decoration:underline;cursor:pointer}
+.hf-more[hidden]{display:none}
+.hf-btn{min-height:44px;min-width:64px;padding:0 14px;border-radius:999px;border:1px solid #2B3833;background:#18211E;color:#F3F1EC;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}
+.hf-btn[hidden]{display:none}
+@media (min-width:700px){.hf-status{font-size:16px}.hf-answer{font-size:15px}}
+
+/* drivefix header (Jard 10-29): row 1 Pause · the day · All n stops; row 2 ‹ Previous door · Stop 2 of 7 · Next door › */
+.dv-top{display:block;padding:calc(8px + env(safe-area-inset-top)) 0 8px}
+.dv-row1{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center}
+.dv-row1 .dv-x{width:48px;height:48px;grid-row:1;grid-column:1;font-size:18px}
+.dv-row1 .dv-day{min-width:0;grid-row:1;grid-column:2}
+.dv-row1 .dv-day b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dv-row1 .dv-voice{grid-row:1;grid-column:3;min-height:44px;white-space:nowrap;margin:0}
+.dv-day .dv-narrow{display:none}
+.dv-stepper{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:8px}
+.dv-step{min-height:48px;border-radius:14px;border:1px solid var(--dv-line);background:var(--dv-card);color:var(--dv-ink);font:600 15px/1.1 Inter,system-ui,sans-serif;padding:0 10px;cursor:pointer}
+.dv-step:last-child{text-align:right}
+.dv-step:first-child{text-align:left}
+.dv-step span[aria-hidden]{font-size:20px;line-height:0;vertical-align:-1px}
+.dv-row1 .dv-day .dv-ahead{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dv-step:disabled{opacity:.35;cursor:default}
+.dv-stepat{font:700 15px/1.2 Inter,system-ui,sans-serif;color:var(--dv-ink2);white-space:nowrap;text-align:center}
+@media (max-width:420px),(max-height:700px){
+  .dv-top{position:sticky;top:0}
+  .dv-day .dv-wide{display:none}
+  .dv-day .dv-narrow{display:block}
+  .dv-row1 .dv-day b{font-size:16px}
+  .dv-step{font-size:14px;padding:0 8px}
+  .dv-stepat{font-size:14px}
+}
+@media (max-width:350px){.dv-step{font-size:14px;padding:0 8px}.dv-stepat{font-size:13px}.dv-wd{display:none}}
+@media (max-height:600px){.dv-day .dv-ahead{display:none!important}}
+/* the door: the essentials, then Navigate and Log visit pinned at the bottom of the screen (above the bar) */
+.dv-door .dv-acts{position:sticky;bottom:0;z-index:2;background:var(--dv-bg);margin-top:14px;padding:10px 0;grid-template-columns:1fr 1fr;box-shadow:0 -1px 0 var(--dv-line)}
+.dv-door .dv-acts>*{grid-column:auto}
+.dv-door .dv-acts>:only-child{grid-column:1/-1}
+.dv-door .dv-acts .dv-big{min-height:64px}
+.dv-fin .dv-acts{position:static;grid-template-columns:1fr;box-shadow:none}
+/* More about this door: everything else, one tap away */
+.dv-more{margin-top:14px;border-top:1px solid var(--dv-line)}
+.dv-more>summary{list-style:none;min-height:52px;display:flex;align-items:center;gap:8px;font:600 16px Inter,system-ui,sans-serif;color:var(--dv-ink2);cursor:pointer}
+.dv-more>summary::-webkit-details-marker{display:none}
+.dv-more>summary::before{content:"+";width:24px;font-size:22px;color:var(--dv-go)}
+.dv-more[open]>summary::before{content:"−"}
+.dv-more .dv-talk,.dv-more .dv-why{margin-top:8px}
+.dv-more .dv-latectl{margin-top:12px}
+/* the Log visit sheet: one line on how to talk, the taps, the box */
+.dv-how{margin:0 0 10px;color:#CFEFDB;font-size:16px}
+.dv-how:empty{display:none}
+.dv-notebtns{flex-wrap:wrap;margin-top:8px}
+.dv-notelive{color:#CFEFDB}
 /* Read it to me / Say it again while they read (Jard 10-28: a tap showed nothing): pressed, "Reading…", and a Stop */
 .dv-mid.reading,.dv-big.reading{background:#CFEFDB;color:#0B100E;border-color:#CFEFDB}
 .dv-readrow{display:flex;gap:8px;margin-top:14px}.dv-readrow .dv-mid{flex:1 1 auto;margin-top:0}.dv-readrow .dv-stop{flex:0 0 auto;min-width:88px}

@@ -29,7 +29,7 @@ export const SAY_START_MS = 2500; // the browser's voice must start by then
 export const RATE = 16000; // what the Worker gets: 16 kHz mono 16-bit WAV (25 s fits its cap)
 export const MSG = {
   blocked: "The microphone is blocked: allow it from the address bar, or tap an answer or type it.",
-  blockedBar: "The microphone is blocked for this site. Allow it in the browser's site settings (or the phone's settings for this browser), then tap Listen.",
+  blockedBar: "The microphone is blocked for this site. Allow it in the browser's site settings (or the phone's settings for this browser), then tap the mic.",
   nomic: "No microphone found: tap an answer or type it.",
   missed: "Didn't catch that: try again, tap an answer, or type it.",
   inOff: "Voice isn't available in this browser right now: tap an answer or type it.",
@@ -49,7 +49,7 @@ export const MSG = {
 let inMode = null; // null (not tried) | "browser" | "server" | "none" (no way in at all: this browser has neither API; never set by a failure)
 let outMode = null;
 let serverIn = null; // the Worker's Whisper: null (not tried) | true | false (off on this server: the hands-free ear uses the browser's)
-let offline = false; // the guided demo makes no live calls: no Worker voice while it runs
+let offline = false; // a page that makes no calls (setDriveOffline): no Worker voice; the guided demo has it (Jard 10-29)
 // r8hf: what went wrong last with the microphone or the Worker's ear: {msg, name, at} (kept, shown, cleared by retryVoiceIn)
 let micFail = null;
 let micCtx = null; // the one AudioContext the recordings share: made (or resumed) inside a tap by unlockAudio, so iPhone WebKit runs it
@@ -62,7 +62,7 @@ const Rec = () => W().SpeechRecognition ?? W().webkitSpeechRecognition ?? null;
 const AC = () => W().AudioContext ?? W().webkitAudioContext ?? null;
 const canRecord = () => typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia && !!AC();
 const net = () => !offline && (typeof navigator === "undefined" || navigator.onLine !== false);
-// a way in exists: the browser's recognizer, or the page can record for the Worker (offline, the guided demo: only the
+// a way in exists: the browser's recognizer, or the page can record for the Worker (offline: only the
 // browser's own). A past failure never takes this away (r8hf): the bar says what failed and offers Try again.
 export const canListen = () => inMode !== "server" && !!Rec() ? true : canRecord() && net();
 export const canSay = () => outMode !== "none";
