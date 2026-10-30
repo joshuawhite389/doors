@@ -83,28 +83,45 @@ export function _resetSpend() {
 const today = (env) => env.TODAY ?? new Date().toISOString().slice(0, 10);
 export const capOf = (env) => Number(env.AGENT_USD_DAILY ?? AGENT_USD_DAILY);
 const book = (env) => (env.SPEND_BOOK ? env.SPEND_BOOK.get(env.SPEND_BOOK.idFromName("claude")) : { fetch: (url, init) => local.fetch(new Request(url, init)) });
+// Live 2026-10-30: the book stopped answering and every Claude path (Agent, polish, briefs) waited on it with no end.
+// A read or add that takes longer than BOOK_MS fails like an unreachable book: no Claude call, the add kept for later.
+export const BOOK_MS = 3000;
+const within = (p, ms, what) => {
+  let t;
+  return Promise.race([p, new Promise((_, no) => (t = setTimeout(() => no(new Error(`${what}: no answer in ${ms} ms`)), ms)))]).finally(() => clearTimeout(t));
+};
+const bookMs = (env) => Number(env.SPEND_BOOK_MS ?? BOOK_MS);
 async function ask(env, path, body) {
-  const res = await book(env).fetch(`https://spend${path}`, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+  const res = await within(book(env).fetch(`https://spend${path}`, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}), bookMs(env), "spend book");
   if (!res.ok) throw new Error(`spend book ${res.status}`);
-  const v = await res.json();
+  const v = await within(res.json(), bookMs(env), "spend book");
   if (v.day === today(env)) Object.assign(seen, { day: v.day, usd: Number(v.usd) || 0, at: Date.now() });
   return v;
 }
 async function send(env, day, usd, kind) {
   try {
     await ask(env, "/add", { day, usd, kind });
+    return true;
   } catch (e) {
     if (unsent.day !== day) Object.assign(unsent, { day, usd: 0, by: {} });
     unsent.usd += usd;
     unsent.by[kind] = (unsent.by[kind] ?? 0) + usd;
     console.warn(`[spend] add failed, kept for the next one: ${String(e?.message ?? e).slice(0, 120)}`);
+    return false;
   }
 }
 const retryUnsent = async (env) => {
   if (unsent.day !== today(env) || !(unsent.usd > 0)) return;
   const by = { ...unsent.by };
   Object.assign(unsent, { usd: 0, by: {} });
-  for (const [kind, usd] of Object.entries(by)) await send(env, today(env), usd, kind);
+  // the book down: one failed add is enough, the rest go back unsent (not a wait per kind)
+  const left = Object.entries(by);
+  while (left.length) {
+    const [kind, usd] = left.shift();
+    if (await send(env, today(env), usd, kind)) continue;
+    for (const [k, u] of left) (unsent.usd += u), (unsent.by[k] = (unsent.by[k] ?? 0) + u);
+    break;
+  }
 };
 
 // One Anthropic call's $ onto the site's day (kind: agent | brief | debrief). Returns the add's promise; settled()

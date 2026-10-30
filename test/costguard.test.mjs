@@ -87,6 +87,26 @@ test("room: under the cap yes, at the cap no, an unreachable book no (and its ad
   assert.equal((await claudeRoom({ ...env, AGENT_USD_DAILY: "0" })).ok, false);
 });
 
+test("a book that never answers: room says unreadable within the time limit, and an add doesn't hold the reply", async () => {
+  const hung = { idFromName: (n) => n, get: () => ({ fetch: () => new Promise(() => {}) }) };
+  const env = { SPEND_BOOK: hung, AGENT_USD_DAILY: "5", TODAY: "2026-10-30", SPEND_BOOK_MS: "50" };
+  let t = Date.now();
+  const room = await claudeRoom(env);
+  assert.equal(room.ok, false);
+  assert.equal(room.reason, "unreadable");
+  assert.ok(Date.now() - t < 1000, `room took ${Date.now() - t} ms`);
+  charge(env, 0.01, "agent");
+  charge(env, 0.02, "brief");
+  t = Date.now();
+  await settled();
+  assert.ok(Date.now() - t < 1000, `settled took ${Date.now() - t} ms`);
+  // back up: the kept adds are sent with the next read
+  const book = new SpendBook(storage());
+  const up = { ...env, SPEND_BOOK: binding(book) };
+  assert.equal((await claudeRoom(up)).ok, true);
+  near((await get(book, "2026-10-30")).usd, 0.03);
+});
+
 test("an Anthropic call that times out is still counted, at its most", async () => {
   const lost = [];
   const sess = anthropicSession({ apiKey: "k", model: "claude-haiku-5-5", maxTokens: 1000, serverTools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }], fetchImpl: async () => { throw Object.assign(new Error("timed out"), { name: "TimeoutError" }); }, onLost: (x) => lost.push(x) })({ system: "s", user: "u", tools: [] });
