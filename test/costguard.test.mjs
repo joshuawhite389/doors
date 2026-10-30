@@ -107,6 +107,20 @@ test("a book that never answers: room says unreadable within the time limit, and
   near((await get(book, "2026-10-30")).usd, 0.03);
 });
 
+test("an add whose request ended never settles: later Claude calls still go ahead (live 2026-10-30)", async () => {
+  // a dead add: the book never answers and its time limit never fires (Workers cancels an ended request's timers)
+  const dead = { idFromName: (n) => n, get: () => ({ fetch: () => new Promise(() => {}) }) };
+  charge({ SPEND_BOOK: dead, TODAY: "2026-10-30", SPEND_BOOK_MS: "1e12" }, 0.01, "agent");
+  const book = new SpendBook(storage());
+  const env = { SPEND_BOOK: binding(book), AGENT_USD_DAILY: "5", TODAY: "2026-10-30", SPEND_SETTLE_MS: "50" };
+  const t = Date.now();
+  assert.equal((await claudeRoom(env)).ok, true);
+  assert.ok(Date.now() - t < 1000, `room took ${Date.now() - t} ms`);
+  const t2 = Date.now();
+  await settled(50);
+  assert.ok(Date.now() - t2 < 1000, `settled took ${Date.now() - t2} ms`);
+});
+
 test("an Anthropic call that times out is still counted, at its most", async () => {
   const lost = [];
   const sess = anthropicSession({ apiKey: "k", model: "claude-haiku-5-5", maxTokens: 1000, serverTools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }], fetchImpl: async () => { throw Object.assign(new Error("timed out"), { name: "TimeoutError" }); }, onLost: (x) => lost.push(x) })({ system: "s", user: "u", tools: [] });

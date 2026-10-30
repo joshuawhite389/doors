@@ -226,7 +226,8 @@ export async function ensureBrief(env, what, city, { fetchImpl, now = new Date()
   // a failed build is tried again after the stale window (a thin brief for a small city stays failed a day)
   const retry = have.status === "failed" && Date.now() - Date.parse(have.at) > (have.thin ? 24 * 3600e3 : BRIEF_STALE_MS);
   if (have.status === "ready" || have.status === "building" || (have.status === "failed" && !retry)) return { state: have };
-  if (building.has(key)) return { state: { status: "building", category: cat, city: name }, work: building.get(key) };
+  // a build another request started: never await it here (an ended request's promise can hang this one, live 10-30)
+  if (building.has(key)) return { state: { status: "building", category: cat, city: name } };
   if (!env.ANTHROPIC_API_KEY) return { state: { status: "none", reason: "no model" } };
   if (!env.DOORS_KV) return { state: { status: "none", reason: "no cache" } };
   // the site's Claude $ for today has room (src/spend.js); spent or unreadable → no build, the turn goes on without

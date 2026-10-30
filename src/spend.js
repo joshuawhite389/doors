@@ -73,7 +73,13 @@ export class SpendBook {
 let local = new SpendBook(null); // no binding: this isolate's own book
 const seen = { day: null, usd: 0, at: 0 }; // the last total the book returned
 const unsent = { day: null, usd: 0, by: {} }; // adds the book didn't take (unreachable): sent with the next one
-const outstanding = new Set(); // adds on their way
+// adds on their way → when each was sent. Live 2026-10-30: this list is shared by every request in an isolate, and an
+// add sent by a request that then ended (the visitor left mid-answer, a waitUntil cut off) never settles: Workers
+// cancels that request's I/O and timers. Every later Claude call awaited it and hung. So settled() waits at most
+// SETTLE_MS, and an add older than STALE_MS is dropped (its $ was counted as unsent or is lost: a few cents at most).
+const outstanding = new Map();
+export const SETTLE_MS = 4000;
+const STALE_MS = 60000;
 export function _resetSpend() {
   local = new SpendBook(null);
   Object.assign(seen, { day: null, usd: 0, at: 0 });
@@ -131,17 +137,23 @@ export function charge(env, usd, kind = "agent") {
   const day = today(env);
   if (seen.day === day) seen.usd += usd; // this isolate's view moves at once; the book's answer replaces it
   const p = send(env, day, usd, kind).finally(() => outstanding.delete(p));
-  outstanding.add(p);
+  outstanding.set(p, Date.now());
   return p;
 }
-export const settled = () => Promise.allSettled([...outstanding]);
+export function settled(ms = SETTLE_MS) {
+  const now = Date.now();
+  for (const [p, at] of outstanding) if (now - at > STALE_MS) outstanding.delete(p);
+  if (!outstanding.size) return Promise.resolve([]);
+  let t;
+  return Promise.race([Promise.allSettled([...outstanding.keys()]), new Promise((ok) => (t = setTimeout(() => ok([]), ms)))]).finally(() => clearTimeout(t));
+}
 
 // May a Claude call start now? → {ok, usd, cap, reason?}: ok while the site's day is under the cap. One read of the
 // book every time (no cached total: another isolate may have spent since); an unreadable book is a no.
 export async function claudeRoom(env) {
   const cap = capOf(env);
   if (!(cap > 0)) return { ok: false, usd: 0, cap, reason: "spent" };
-  await settled();
+  await settled(Number(env.SPEND_SETTLE_MS ?? SETTLE_MS));
   await retryUnsent(env);
   const day = today(env);
   const pending = unsent.day === day ? unsent.usd : 0;
