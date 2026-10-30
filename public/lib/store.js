@@ -186,6 +186,30 @@ export function createStore(storage = defaultStorage()) {
     },
     setRules: (brand, records) => (records?.length ? writeRaw(rulesKey(brand), JSON.stringify(records)) : removeRaw(rulesKey(brand))),
     remove: (brand, city) => removeRaw(storeKey(brand, city)),
+    // Delete (Jard 10-29: "i need a way to delete profiles/ brands/ cities that i've made"): one city's plan (its
+    // visits, notes and log book ride in it), or with city null a whole brand: every city of it, its rules and, when it
+    // is the saved brand, the brand itself. Returns an undo that writes back exactly what went.
+    drop: ({ brand, city = null }) => {
+      const gone = [];
+      const take = (k) => {
+        const v = readRaw(k);
+        if (v != null) gone.push([k, v]), removeRaw(k);
+      };
+      if (city != null) take(storeKey(brand, city));
+      else {
+        const b = slug(brand);
+        for (const k of keys()) {
+          let x = null;
+          try { x = JSON.parse(readRaw(k)); } catch {}
+          if (isPlanState(x) && x.city && slug(x.brand) === b) take(k);
+        }
+        take(rulesKey(brand));
+        let saved = null;
+        try { saved = JSON.parse(readRaw(BRAND_KEY) ?? "null")?.profile; } catch {}
+        if (saved && slug(String(saved.brand ?? "").trim() || "my brand") === b) take(BRAND_KEY);
+      }
+      return () => gone.forEach(([k, v]) => writeRaw(k, v));
+    },
     // the brand (group 3 #5): {v, profile, savedAt} → its profile (brand fields only), or null
     getBrand: () => {
       try {

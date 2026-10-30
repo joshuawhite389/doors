@@ -339,9 +339,35 @@ function getPlayer() {
     player = new Audio();
     player.preload = "auto";
     try { player.setAttribute("playsinline", ""); } catch {}
+    // a clip that played to its end lets go of the element at once (release), so no Now Playing card stays behind;
+    // a newer clip already on the element (ended is false again) is left alone
+    try { player.addEventListener("ended", () => { if (player.ended) { release(); playing = null; } }); } catch {}
   }
   return player;
 }
+// Jard 10-29: after Doors spoke, the iPhone's lock screen and Control Center showed a "Your plan · Doors" Now Playing
+// card (the page title and icon, play / skip 10 s) like music, and it stayed. iPhone WebKit registers any media element
+// that played as the page's media session and keeps it after the clip ends; Android Chrome posts a media notification
+// for a long one. A spoken line is not music: when a clip ends or is stopped, the element drops its source (pause,
+// no src, load()), which ends the page's media session (iOS hands Now Playing back to whatever played before), and
+// navigator.mediaSession is cleared (no title, state none, no handlers). The element itself stays, and stays unlocked:
+// WebKit lifts the tap rule for the element, not for one source, and every clip already swapped the src.
+const MEDIA_ACTIONS = ["play", "pause", "stop", "seekbackward", "seekforward", "seekto", "previoustrack", "nexttrack"];
+function clearMediaSession() {
+  const ms = typeof navigator !== "undefined" ? navigator.mediaSession : null;
+  if (!ms) return;
+  try { ms.metadata = null; } catch {}
+  try { ms.playbackState = "none"; } catch {}
+  for (const a of MEDIA_ACTIONS) try { ms.setActionHandler(a, null); } catch {}
+}
+function release() {
+  const p = player;
+  if (!p) return;
+  try { p.pause(); } catch {}
+  try { if (p.hasAttribute("src")) { p.removeAttribute("src"); p.load(); } } catch {}
+  clearMediaSession();
+}
+export const _player = () => player; // for the tests and the CDP check
 // inside a tap (drive mode's first tap, the Agent, Read it to me): the element plays a short silence, the audio session
 // is set to playback (iOS 17+: through the ringer switch), and later plays need no tap
 export function unlockAudio() {
@@ -385,7 +411,10 @@ const playerBusy = () => Boolean(player && playing && !player.paused && !player.
 
 export function hush() {
   try { if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel(); } catch {}
-  try { if (player && playing) player.pause(); } catch {}
+  // stopped mid-line (Stop, a newer line, the mic): the element lets go of it too. The tap's silence (unlockAudio) is
+  // left to end on its own (50 ms; it releases itself) so a hush right after a tap can't cut the unlock short
+  if (playing || (player && player.hasAttribute("src") && player.getAttribute("src") !== SILENT)) release();
+  else clearMediaSession();
   playing = null;
 }
 

@@ -764,3 +764,11 @@ html.agent-open .route .mapwrap .btn.ask,html.driving .route .mapwrap .btn.ask{d
   .mapwrap>.rattr{grid-row:7}
   .mapwrap>.drawer{margin-top:0}
 }
+
+/* Delete (Jard 10-29): the Undo toast after deleting a city or a brand, on the page (it stays when the delete opens
+   another screen); the plan's Settings asks in place */
+.toast.app-toast{position:fixed;left:50%;bottom:24px;z-index:70}
+@media (max-width:700px){.toast.app-toast{left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom))}}
+#settings .set-del{flex-wrap:wrap}
+#settings .set-del .ptext{flex:1 1 220px;color:var(--warn-ink);font-size:13.5px}
+#settings .set-del .pact{display:flex;gap:6px}

@@ -9,7 +9,7 @@ import { $, $$, esc, debounce, cap } from "./dom.js";
 import { searchBrands, searchRooms, loadDrinks, geocode, loadRoutes, locateCity } from "./data.js";
 import { searchDrinks, heldMatch, fold } from "../lib/drinks.js";
 import { createMap, addStart } from "./map.js";
-import { planRow, ADD_CITY } from "../lib/plans.js";
+import { planRow, ADD_CITY, BRAND_HREF, groupPlans, deleteCityAsk, deleteBrandAsk } from "../lib/plans.js";
 import { autocomplete } from "./data.js";
 import { mountRules } from "./rules.js"; // Your rules: brand-wide, so in Edit profile (ease audit #9)
 import { hrefFor } from "../lib/router.js";
@@ -80,7 +80,7 @@ function goToField(root, field) {
   return true;
 }
 
-function renderForm(root, { index, profile, onChange, onBuild, onSample, onClear, editing: editOf = null, plans = null, rules = null, mode = "all", cancel = null, back = null, brandHref = null, field = null }) {
+function renderForm(root, { index, profile, onChange, onBuild, onSample, onClear, editing: editOf = null, plans = null, rules = null, mode = "all", cancel = null, back = null, brandHref = null, field = null, onDelete = null }) {
   const p = profile;
   const touched = new Set();
   let dirty = false; // round 8: something changed since the form opened (Back asks before it drops the change)
@@ -200,6 +200,7 @@ function renderForm(root, { index, profile, onChange, onBuild, onSample, onClear
           <div class="chips" id="known-tags" style="margin-top:8px"></div></div>
       </details>
       </div>
+      ${onDelete ? `<div class="startover" id="f-delete"><button type="button" class="btn line sm" data-del="ask">${esc(onDelete.label)}</button></div>` : ""}<!-- Delete (Jard 10-29) -->
       <div class="build sticky"><button class="btn primary" id="build" type="submit">${buildLabel}</button>${cancel ? `<a class="btn line" id="f-cancel" href="${esc(cancel)}">Cancel</a>` : ""}<span class="need" id="need" aria-live="polite"></span></div>
     </form>
     <aside class="pside"><div class="pside-in">
@@ -229,6 +230,15 @@ function renderForm(root, { index, profile, onChange, onBuild, onSample, onClear
       backEl.focus();
     });
   }
+  // Delete (Jard 10-29): Edit my brand's "Delete this brand", a city's "Delete this city"; asks in place first
+  const del = $("#f-delete", root);
+  del?.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-del]")?.dataset.del;
+    if (act === "ask") del.innerHTML = `<span class="ptext">${esc(onDelete.ask)}</span><span class="pact"><button type="button" class="btn sm danger" data-del="yes">Delete</button><button type="button" class="btn line sm" data-del="no">Keep</button></span>`;
+    else if (act === "no") del.innerHTML = `<button type="button" class="btn line sm" data-del="ask">${esc(onDelete.label)}</button>`;
+    else if (act === "yes") return void onDelete.go();
+    $("[data-del]", del)?.focus();
+  });
   const city = () => index.cities.find((c) => c.key === p.city);
 
   // ---------- 1, 2: brand, what you make ----------
@@ -1279,33 +1289,53 @@ function partNote(mode, editing, p) {
 // "My cities" (group 3 #5, was "Your plans", G7): every city saved under the brand, newest first. A row opens its plan;
 // Edit opens its days and start; Delete asks on the row itself first. list() → store.list() rows; onDelete(row)
 // removes one; current: {brand, city} of the plan on screen; onCount(n) after each draw. Returns {draw}.
-export function mountCities(el, { list, cities, current = null, onDelete, onCount = () => {} }) {
-  let asking = null; // "brand\u0000city" of the row waiting for "Delete?"
-  let rows = [];
+// Delete (Jard 10-29): grouped by brand (a device can hold plans of more than one brand), each brand with its own
+// Delete that takes its cities with it (onDeleteBrand(group)); brand(): the saved brand. Edit and Add a city are the
+// saved brand's (the forms are its).
+export function mountCities(el, { list, cities, current = null, brand = () => null, onDelete, onDeleteBrand = () => {}, onCount = () => {} }) {
+  let asking = null; // "brand\u0000city" of the row waiting for "Delete?", or "b:<brand>" of a brand's
+  let groups = [];
   const draw = () => {
-    rows = list().map((r) => ({ ...planRow(r, cities), raw: r }));
-    if (!rows.some((r) => r.id === asking)) asking = null;
+    const rows = list();
+    groups = groupPlans(rows, brand()).map((g) => ({ ...g, rows: g.rows.map((r) => ({ ...planRow(r, cities), raw: r })) }));
+    const ids = groups.flatMap((g) => [`b:${g.brand}`, ...g.rows.map((r) => r.id)]);
+    if (!ids.includes(asking)) asking = null;
     const isCur = (r) => current && r.raw.brand === current.brand && r.raw.city === current.city;
-    el.innerHTML = `${rows.length ? `<ul class="plist">${rows.map((r, i) => r.id === asking
-      ? `<li class="prow ask" data-i="${i}"><span class="ptext">Delete ${esc(r.city)}? Its plan, statuses, outcomes and contacts go too.</span>
+    const row = (g, gi) => (r, i) => r.id === asking
+      ? `<li class="prow ask" data-g="${gi}" data-i="${i}"><span class="ptext">${esc(deleteCityAsk(g.name, r.city))}</span>
           <span class="pact"><button type="button" class="btn sm danger" data-act="yes">Delete</button><button type="button" class="btn line sm" data-act="no">Keep</button></span></li>`
-      : `<li class="prow${isCur(r) ? " cur" : ""}" data-i="${i}"><a class="popen" href="${esc(r.open)}"${isCur(r) ? ' aria-current="page"' : ""}><b>${esc(r.city)}</b>
+      : `<li class="prow${isCur(r) ? " cur" : ""}" data-g="${gi}" data-i="${i}"><a class="popen" href="${esc(r.open)}"${isCur(r) ? ' aria-current="page"' : ""}><b>${esc(r.city)}</b>
           <small>${esc(r.days)}${r.opened ? ` · ${esc(r.opened)}` : ""}${isCur(r) ? " · on screen" : ""}</small></a>
-          <span class="pact"><a class="btn line sm" href="${esc(r.edit)}" aria-label="Edit ${esc(r.city)}">Edit</a><button type="button" class="btn line sm" data-act="del" aria-label="Delete ${esc(r.city)}">Delete</button></span></li>`).join("")}</ul>`
-      : `<p class="pnone">No cities yet. Add one and its plan shows here.</p>`}
-      <div class="pfoot"><a class="btn line sm" href="${esc(ADD_CITY)}">Add a city</a></div>`;
+          <span class="pact">${g.saved ? `<a class="btn line sm" href="${esc(r.edit)}" aria-label="Edit ${esc(r.city)}">Edit</a>` : ""}<button type="button" class="btn line sm" data-act="del" aria-label="Delete ${esc(g.name)} in ${esc(r.city)}">Delete</button></span></li>`;
+    const group = (g, gi) => `<section class="pbrand" data-g="${gi}">
+        <div class="pbhead${asking === `b:${g.brand}` ? " ask" : ""}">${asking === `b:${g.brand}`
+          ? `<span class="ptext">${esc(deleteBrandAsk(g.name, g.rows.length))}</span><span class="pact"><button type="button" class="btn sm danger" data-act="byes">Delete</button><button type="button" class="btn line sm" data-act="bno">Keep</button></span>`
+          : `<h3>${esc(g.name)}</h3><span class="pact">${g.saved ? `<a class="btn line sm" href="${esc(BRAND_HREF)}">Edit brand</a>` : ""}<button type="button" class="btn line sm" data-act="bdel" aria-label="Delete ${esc(g.name)} and its cities">Delete brand</button></span>`}</div>
+        ${g.rows.length ? `<ul class="plist">${g.rows.map(row(g, gi)).join("")}</ul>` : `<p class="pnone">No cities yet.${g.saved ? " Add one and its plan shows here." : ""}</p>`}
+        ${g.saved ? `<div class="pfoot"><a class="btn line sm" href="${esc(ADD_CITY)}">Add a city</a></div>` : ""}
+      </section>`;
+    el.innerHTML = groups.length ? groups.map(group).join("") : `<p class="pnone">No brands or cities on this device.</p>`;
     onCount(rows.length);
   };
   el.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-act]");
     if (!b) return;
-    const r = rows[+b.closest("[data-i]").dataset.i];
+    const gi = +b.closest("[data-g]").dataset.g;
+    const g = groups[gi];
+    const li = b.closest("[data-i]");
+    const r = li && g.rows[+li.dataset.i];
     const act = b.dataset.act;
     if (act === "del") asking = r.id;
-    else if (act === "no") asking = null;
-    else if (act === "yes") { asking = null; onDelete(r.raw); }
+    else if (act === "bdel") asking = `b:${g.brand}`;
+    else if (act === "no" || act === "bno") asking = null;
+    else if (act === "yes") { asking = null; onDelete(r.raw, g); }
+    else if (act === "byes") { asking = null; onDeleteBrand(g); }
+    if (!el.isConnected) return; // the delete left the page
     draw();
-    $(act === "del" ? '[data-act="no"]' : act === "no" ? `[data-i="${b.closest("[data-i]").dataset.i}"] .popen` : ".popen, .pfoot a", el)?.focus();
+    const focus = act === "del" || act === "bdel" ? '[data-act="no"], [data-act="bno"]'
+      : act === "no" ? `[data-g="${gi}"][data-i="${li.dataset.i}"] .popen`
+      : act === "bno" ? `[data-g="${gi}"] [data-act="bdel"]` : ".popen, .pfoot a, [data-act]";
+    $(focus, el)?.focus();
   });
   return { draw };
 }

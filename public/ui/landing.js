@@ -185,13 +185,16 @@ async function savedPlans() {
   const cta = document.querySelector(".hero .cta");
   cta?.prepend(open);
   cta?.querySelector('a[href="/app#/demo"]')?.classList.replace("primary", "ghost");
-  if (rows.length === 1) return; // the button is the only plan
+  // Delete (Jard 10-29): My cities opens, edits or deletes a city or a brand; one plan: the link alone
+  const manage = `<a href="/app#/cities">Edit or delete</a>`;
+  if (rows.length === 1) return void cta?.after(Object.assign(document.createElement("p"), { className: "saved-plans", innerHTML: `${manage} your plan` }));
   const shown = rows.slice(0, 3).map((r) => planRow(r, cities));
   const more = rows.length - shown.length;
   const line = Object.assign(document.createElement("p"), { className: "saved-plans" });
-  const link = (r) => `<a href="/app${esc(r.open)}">${esc(r.city)}</a>`; // group 3 #5: one brand, its cities
+  const brands = new Set(rows.map((r) => r.brand.trim().toLowerCase())).size;
+  const link = (r) => `<a href="/app${esc(r.open)}">${esc(brands > 1 ? `${r.name} · ${r.city}` : r.city)}</a>`; // group 3 #5: one brand, its cities; Delete: more than one brand names each
   // intuitiveness audit #8: "N more" opened a blank form; it now lists the rest here
-  line.innerHTML = `Your cities: ${shown.map(link).join(", ")}${more ? `, <button type="button" class="lnk" data-more>${more} more</button>` : ""}`;
+  line.innerHTML = `Your ${brands > 1 ? "plans" : "cities"}: <span class="sp-list">${shown.map(link).join(", ")}${more ? `, <button type="button" class="lnk" data-more>${more} more</button>` : ""}</span> · ${manage}`;
   line.querySelector("[data-more]")?.addEventListener("click", (e) => {
     e.currentTarget.outerHTML = rows.slice(3).map((r) => link(planRow(r, cities))).join(", ");
     line.querySelector("a:nth-of-type(4)")?.focus();

@@ -1,7 +1,7 @@
 // "My cities" (group 3 #5, was "Your plans"): the brand's saved cities as rows for the list, and the app's links.
 // Pure (no DOM, no storage): covered by test/plans.test.mjs. The rows come from store.list().
 import { hrefFor } from "./router.js";
-import { niceDate, isoDate } from "./profile.js";
+import { niceDate, isoDate, withBrand } from "./profile.js";
 import { DAYS } from "./core.js";
 import { withoutStarts } from "./week.js";
 
@@ -41,4 +41,53 @@ export function copyProfile(p) {
   out.windows = (out.windows ?? []).map(({ start, ...w }) => w);
   if (out.week) out.week = withoutStarts(out.week); // the usual week keeps its hours, not its days' own starts
   return out;
+}
+
+// Delete (Jard 10-29: "i need a way to delete profiles/ brands/ cities that i've made"). store.list() rows → one group
+// per brand, the saved brand first (it shows even with no city left), then the others newest first. Each group:
+// {brand (the store's key name), name (as typed), saved, rows}.
+const brandSlug = (s) => String(s ?? "").trim().toLowerCase();
+export function groupPlans(rows, savedBrand = null) {
+  const savedKey = savedBrand ? String(savedBrand.brand ?? "").trim() || "my brand" : null;
+  const groups = [];
+  const at = new Map();
+  if (savedKey) at.set(brandSlug(savedKey), groups[groups.push({ brand: savedKey, name: savedBrand.brand?.trim() || "My brand", saved: true, rows: [] }) - 1]);
+  for (const r of rows) {
+    const k = brandSlug(r.brand);
+    if (!at.has(k)) at.set(k, groups[groups.push({ brand: r.brand, name: r.profile?.brand?.trim() || r.brand, saved: false, rows: [] }) - 1]);
+    at.get(k).rows.push(r);
+  }
+  return groups;
+}
+
+// What a delete asks, and what it says after (plain words; "on this device" as the footer says).
+const citiesWord = (n) => `${n} ${n === 1 ? "city" : "cities"}`;
+export const deleteCityAsk = (name, city) => `Delete ${name} in ${city}? Its plan, visits and notes on this device go too.`;
+export const deleteBrandAsk = (name, n) => n ? `Delete ${name} and its ${citiesWord(n)}? Their plans, visits and notes on this device go too.` : `Delete ${name}? Its rules on this device go too.`;
+export const deletedCity = (name, city) => `Deleted ${name} in ${city}.`;
+export const deletedBrand = (name, n) => (n ? `Deleted ${name} and its ${citiesWord(n)}.` : `Deleted ${name}.`);
+
+// Edit my brand saved: the brand's fields (next) written into every city OF THAT BRAND (was: the saved brand before the
+// save), a new name moving each of them, and the brand's rules, to its key. Every one of those cities re-plans from
+// fresh days (statuses, outcomes and contacts stay). Another brand's cities on the same device are never touched (gigbot
+// 10-29: Jard's phone holds two brands; an edit of one wrote its name into the other's cities). except: a city of the
+// brand whose plan already applied the change in place (round 4 #6). store: lib/store.js (or a wrapper of it).
+export function applyBrand(store, next, was, { except = null } = {}) {
+  const name = (x) => String(x?.brand ?? "").trim() || "my brand";
+  const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
+  store.setBrand(next);
+  if (!was) return next;
+  for (const row of store.list()) {
+    if (!same(row.brand, name(was)) || (except && row.city === except)) continue;
+    const k = { brand: name(next), city: row.city };
+    const st = store.load(row.brand, row.city);
+    const merged = withBrand(next, row.profile);
+    if (k.brand === row.brand) store.update(row.brand, row.city, (s) => ({ ...s, profile: merged, current: null }));
+    else { store.save(k.brand, k.city, { ...st, profile: merged, current: null }); store.remove(row.brand, row.city); }
+  }
+  if (name(was) !== name(next)) {
+    const rules = store.getRules(name(was));
+    if (rules.length) { store.setRules(name(next), [...store.getRules(name(next)), ...rules]); store.setRules(name(was), []); }
+  }
+  return next;
 }

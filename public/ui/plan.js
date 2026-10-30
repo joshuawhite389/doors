@@ -34,7 +34,7 @@ import { mountAgent } from "./agent.js"; // R9 chat agent: Ask Doors
 import { drawExport, download } from "./export.js"; // C1: notes + call sheet
 import { setNavApp, currentNavName, navAppButtons } from "./navapp.js"; // PARITY S14: the navigation app
 import { outcomeTags, isReturnVisit } from "../lib/outcome.js";
-import { editHref, DEMO_EDIT, BRAND_HREF, CITIES_HREF } from "../lib/plans.js"; // G7; group 3 #5: Settings → Edit my brand, My cities
+import { editHref, DEMO_EDIT, BRAND_HREF, CITIES_HREF, deleteCityAsk } from "../lib/plans.js"; // G7; group 3 #5: Settings → Edit my brand, My cities
 import { drawWhy as drawWhyPanel, setWhyDoor, setWhyArea } from "./why.js"; // G6: the Why these rooms dashboard
 import { openDrive } from "./drive.js"; // R9 drive mode
 import { skipToEnd, moveIntoDay, offEveryDay, noRoomText } from "../lib/drive-day.js"; // drive mode's Skip for now; a move onto the day under way
@@ -203,7 +203,7 @@ function restingView(root, { message, runs, profile, index, onUse }) {
 // pending (round 4 #6): {profile, text} a Settings form just saved: shown as a change to try (what it does to the plan),
 // applied with Apply (Changes you made, Undo) or dropped. onBrand(brandPart): the brand's fields changed on this plan
 // (Apply or its Undo): the app writes them into the other cities.
-export async function renderPlan(root, { index, profile, store, onProfile = () => {}, onUse = null, alive = () => true, demo = null, drive = false, nav = null, carry = null, params = {}, plans = null, pending = null, onBrand = null }) {
+export async function renderPlan(root, { index, profile, store, onProfile = () => {}, onUse = null, alive = () => true, demo = null, drive = false, nav = null, carry = null, params = {}, plans = null, pending = null, onBrand = null, onDelete = null }) {
   let c = cityOf(profile, index); // L1: a live city until its run names it (Qloo's locality, its centre)
   const brand = profile.brand.trim() || "my brand";
   const editTo = demo ? DEMO_EDIT : editHref(brand, c.key); // G7: Edit profile opens this plan's profile
@@ -1140,10 +1140,11 @@ export async function renderPlan(root, { index, profile, store, onProfile = () =
         <button class="btn sm drive-start" id="t-drive" data-drive-start>Start my day</button>
         <button class="btn sm" data-drawer="why" aria-expanded="false" aria-controls="why">${esc(BASIS_BUTTON)}</button>
         <button class="btn sm" data-drawer="logbook" aria-expanded="false" aria-controls="logbook">${esc(LOGBOOK_LABEL)}</button><!-- round 6 #5 (Jard 10-27): a main button of the bar, out of the Menu -->
-        <button class="btn sm menu-btn" id="t-menu" data-drawer="menu" aria-expanded="false" aria-controls="menu" aria-haspopup="true" aria-label="Menu: Home, Export, Settings, Privacy">${icon("menu", 18)}<span class="lbl">Menu</span></button>
+        <button class="btn sm menu-btn" id="t-menu" data-drawer="menu" aria-expanded="false" aria-controls="menu" aria-haspopup="true" aria-label="Menu: Home, ${demo ? "" : "My cities, "}Export, Settings, Privacy">${icon("menu", 18)}<span class="lbl">Menu</span></button>
       </div>
       <div class="drawer menu-pop" id="menu" aria-label="Menu" hidden>
         <a class="mi" href="/?home=1"><b>Home</b><span>Watch the tour</span></a><!-- group 3 #5: Your plans and New profile went; your cities are in Settings -->
+        ${demo ? "" : `<a class="mi" href="${CITIES_HREF}"><b>My cities</b><span>Open another city, or delete a city or a brand</span></a>`}<!-- Delete (Jard 10-29: "i need a way to delete profiles/ brands/ cities") -->
         <button type="button" class="mi" data-drawer="export" aria-expanded="false" aria-controls="export"><b>Export</b><span>The plan as CSV, the drafted messages, the call sheet</span></button>
         <button type="button" class="mi" id="t-settings" data-drawer="settings" aria-expanded="false" aria-controls="settings"><b>Settings</b><span>Your brand, your cities, navigation app</span></button>
         <button type="button" class="mi" id="t-homescreen" data-drawer="homescreen" aria-expanded="false" aria-controls="homescreen" hidden><b>Add to Home Screen</b><span></span></button><!-- round 8 (Jard 10-28): an iPhone or iPad in a browser tab (ui/carry.js status); the drive-mode strip went -->
@@ -2001,7 +2002,7 @@ export async function renderPlan(root, { index, profile, store, onProfile = () =
     const s = carry?.status();
     it.hidden = !s;
     if (s) $("span", it).textContent = HS[s.state];
-    $("#t-menu", root)?.setAttribute("aria-label", s ? "Menu: Home, Export, Settings, Add to Home Screen, Privacy" : "Menu: Home, Export, Settings, Privacy");
+    $("#t-menu", root)?.setAttribute("aria-label", `Menu: Home, ${demo ? "" : "My cities, "}Export, Settings, ${s ? "Add to Home Screen, " : ""}Privacy`);
     const dr = $("#homescreen", root);
     if (dr && !dr.hidden) drawHomeScreen(dr);
   }
@@ -2027,9 +2028,19 @@ export async function renderPlan(root, { index, profile, store, onProfile = () =
       ${part("city")}
       <ul class="xlist">
         ${demo ? "" : `<li><div><b>My cities</b><div class="small muted">Every city you've opened, each with its own plan. Add one or delete one.</div></div><a class="btn line sm" href="${CITIES_HREF}">My cities</a></li>`}<!-- group 3 #5 -->
+        ${onDelete ? `<li class="set-del" id="set-del"><div><b>Delete ${esc(c.name)}</b><div class="small muted">This city's plan, visits and notes on this device. Your brand and other cities stay.</div></div><button type="button" class="btn line sm" data-del="ask">Delete this city</button></li>` : ""}<!-- Delete (Jard 10-29) -->
         <li class="set-nav"><div><b>Navigation app</b><div class="small muted">Navigate and directions open ${esc(currentNavName())}.</div></div><div class="set-navapps" role="group" aria-label="Navigation app">${navAppButtons()}</div></li>
       </ul>`;
     // PARITY S14 (the phone's Settings → Navigation app): remembered on this device; the open stop's Directions follow
+    // Delete (Jard 10-29): asks in place; a yes deletes this city (app.js: the next plan opens, with Undo)
+    const del = $("#set-del", dr);
+    del?.addEventListener("click", (e) => {
+      const act = e.target.closest("[data-del]")?.dataset.del;
+      if (act === "ask") del.innerHTML = `<div class="ptext">${esc(deleteCityAsk(profile.brand.trim() || "My brand", c.name))}</div><div class="pact"><button type="button" class="btn sm danger" data-del="yes">Delete</button><button type="button" class="btn line sm" data-del="no">Keep</button></div>`;
+      else if (act === "no") return void (drawSettings(dr), $('#set-del [data-del="ask"]', dr)?.focus());
+      else if (act === "yes") return void onDelete();
+      $("[data-del]", del)?.focus();
+    });
     $(".set-navapps", dr).addEventListener("click", (e) => {
       const b = e.target.closest("[data-nav-app]");
       if (!b) return;

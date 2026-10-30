@@ -13,8 +13,9 @@ import { cityOf, liveDrinkers, routeFiles } from "../lib/live.js";
 import { profileChanges, changesLine } from "../lib/settings.js"; // round 4 #6: a saved form's change, in words
 import { renderProfile, mountCities, cityLabel } from "./profile.js";
 import { demoProfile } from "../lib/demo-profile.js";
-import { planHref, BRAND_HREF, ADD_CITY } from "../lib/plans.js";
+import { planHref, BRAND_HREF, ADD_CITY, deletedCity, deletedBrand, deleteCityAsk, deleteBrandAsk, applyBrand } from "../lib/plans.js";
 import { renderPlan } from "./plan.js";
+import { keyOf as chatKey } from "./agent.js"; // Delete: the deleted cities' Agent chats (this tab) go too
 import { renderDemo } from "./demo.js"; // C2
 import { mountCarry, carryIn, standalone, noPlansNote } from "./carry.js"; // R9 carry
 // R9 deep: ?deep=off or ?deepOff=tod,lead,hooks,heat switches Qloo's cultural signals off for this page (ablation)
@@ -28,7 +29,7 @@ if (typeof location !== "undefined") setDeepOff(deepOffFromSearch(location.searc
 const base = loggingStore(createStore(), { nameOf: (id) => getPlan()?.venues?.[id]?.name ?? null });
 const carry = mountCarry({ store: base });
 const store = { ...base };
-for (const f of ["save", "update", "setStatus", "setOutcome", "setSlots", "setRules", "remove", "setBrand"]) store[f] = (...a) => { const r = base[f](...a); carry.changed(); return r; };
+for (const f of ["save", "update", "setStatus", "setOutcome", "setSlots", "setRules", "remove", "setBrand", "drop"]) store[f] = (...a) => { const r = base[f](...a); carry.changed(); return r; };
 const DRAFT = ["draft", ""];
 const fill = (d) => (d?.v === 1 ? { ...withBrand(d, d), known: d.known ?? [] } : null);
 const readDraft = () => fill(store.load(...DRAFT).profile);
@@ -47,29 +48,13 @@ const savedBrand = () => {
   base.setBrand(out);
   return out;
 };
-// Save the brand and write it into every city (a new name moves each city, and the brand's rules, to its key). Every
-// city re-plans from fresh days (statuses, outcomes and contacts stay), as Build does.
+// Save the brand and write it into every city of it (lib/plans.js applyBrand: never another brand's, gigbot 10-29)
 // except (round 4 #6): the city whose plan applied the change in place (ui/plan.js takeProfile): its profile and plan
 // are its own; the brand's fields go to the other cities only
 function saveBrand(p, { except = null } = {}) {
   const next = brandPart(p);
   delete next.sample;
-  const was = savedBrand();
-  store.setBrand(next);
-  const name = (x) => String(x?.brand ?? "").trim() || "my brand";
-  for (const row of store.list()) {
-    if (except && row.city === except) continue;
-    const k = { brand: name(next), city: row.city };
-    const st = store.load(row.brand, row.city);
-    const merged = withBrand(next, row.profile);
-    if (k.brand === row.brand) store.update(row.brand, row.city, (s) => ({ ...s, profile: merged, current: null }));
-    else { store.save(k.brand, k.city, { ...st, profile: merged, current: null }); store.remove(row.brand, row.city); }
-  }
-  if (was && name(was) !== name(next)) {
-    const rules = store.getRules(name(was));
-    if (rules.length) { store.setRules(name(next), [...store.getRules(name(next)), ...rules]); store.setRules(name(was), []); }
-  }
-  return next;
+  return applyBrand(store, next, savedBrand(), { except });
 }
 let lastPlan = null; // {brand, city} of the plan last on screen: where Edit my brand and My cities go back to
 // round 4 #6: a saved brand's or city's form doesn't write its profile; the plan shows the change first (what it does
@@ -132,14 +117,66 @@ function startForm(p, of = null) {
   saveDraft(p);
 }
 
-function deleteCity(row) {
-  store.remove(row.brand, row.city);
-  if (lastPlan && lastPlan.brand === row.brand && lastPlan.city === row.city) lastPlan = null;
-  if (editOf && editOf.brand === row.brand && editOf.city === row.city) editOf = null;
-  citiesMounted.forEach((m) => m.draw());
+// Delete (Jard 10-29: "i need a way to delete profiles/ brands/ cities that i've made"): a city, or a brand with every
+// city of it (what: {brand, city|null}), from My cities, the plan's Settings or Edit my brand; one toast with Undo. The
+// plan on screen deleted: the newest city of the same brand, else the newest plan, else the first form.
+const sameBrand = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
+const hit = (what) => (k) => Boolean(k && sameBrand(k.brand, what.brand) && (what.city == null || k.city === what.city));
+function deletePlan(what, text) {
+  const was = at && { name: at.name, params: at.params };
+  const onScreen = at?.name === "plan" && shown && hit(what)(keyOf(shown));
+  const gone = store.list().filter((r) => hit(what)(r));
+  const fromForm = (at?.name === "brand" && what.city == null) || (at?.name === "city" && editOf && hit(what)(editOf));
+  const undo = store.drop(what);
+  // their Agent chats in this tab (sessionStorage, ui/agent.js), put back by Undo
+  const chats = [];
+  try {
+    for (const r of gone) {
+      const k = chatKey({ profile: r.profile, city: { key: r.city } });
+      const v = sessionStorage.getItem(k);
+      if (v != null) chats.push([k, v]), sessionStorage.removeItem(k);
+    }
+  } catch {}
+  if (hit(what)(lastPlan)) lastPlan = null;
+  if (hit(what)(editOf)) editOf = null;
+  if (pendingEdit && hit(what)(pendingEdit.to)) pendingEdit = null;
+  const left = store.list();
+  const empty = !left.length && !savedBrand();
+  if (empty) startForm(emptyProfile());
+  if (onScreen || fromForm || (empty && at?.name === "cities")) {
+    const next = left.find((r) => sameBrand(r.brand, what.brand)) ?? left[0];
+    if (next && onScreen) router.go("plan", { brand: next.brand, city: next.city });
+    else router.go(empty ? "new" : "cities");
+  } else {
+    citiesMounted.forEach((m) => m.draw());
+    if (at) drawBar(at);
+  }
+  undoToast(text, () => {
+    undo();
+    try { chats.forEach(([k, v]) => sessionStorage.setItem(k, v)); } catch {}
+    carry.changed();
+    if (at?.name !== was?.name || !sameParams(at.params, was.params)) router.go(was.name, was.params);
+    else { citiesMounted.forEach((m) => m.draw()); drawBar(at); }
+  });
+}
+const deleteCity = (row, g) => deletePlan({ brand: row.brand, city: row.city }, deletedCity(g?.name ?? row.profile?.brand ?? row.brand, cityLabel({ city: row.city }, index, row.profile)));
+const deleteBrand = (g) => deletePlan({ brand: g.brand, city: null }, deletedBrand(g.name, g.rows.length));
+
+// the Undo toast: on the page, not in a view, so it stays when a delete moves to another screen
+const toastEl = Object.assign(document.createElement("div"), { className: "toast app-toast", hidden: true });
+toastEl.setAttribute("role", "status");
+document.body.append(toastEl);
+let toastTimer = 0;
+const hideToast = () => { clearTimeout(toastTimer); toastEl.hidden = true; toastEl.innerHTML = ""; };
+function undoToast(text, undo) {
+  clearTimeout(toastTimer);
+  toastEl.innerHTML = `<span>${esc(text)}</span><button type="button" class="lnk" data-undo>Undo</button>`;
+  toastEl.hidden = false;
+  $("[data-undo]", toastEl).addEventListener("click", () => { hideToast(); undo(); });
+  toastTimer = setTimeout(hideToast, 12000);
 }
 
-const citiesOpts = (current) => ({ list: () => store.list(), cities: index.cities, current, onDelete: deleteCity });
+const citiesOpts = (current) => ({ list: () => store.list(), cities: index.cities, current, brand: () => store.getBrand() ?? (store.list().length ? savedBrand() : null), onDelete: deleteCity, onDeleteBrand: deleteBrand });
 const formProfile = () => profile;
 // where a brand or city form's Cancel (and its save) goes: the plan last on screen, else My cities
 const backTo = () => (lastPlan && store.load(lastPlan.brand, lastPlan.city).profile ? planHref(lastPlan.brand, lastPlan.city) : store.list().length ? hrefFor("cities") : "#/new");
@@ -176,34 +213,29 @@ function drawBar(route) {
     <div class="right">${right}</div>`;
 }
 
-// My cities (group 3 #5): the brand's cities, each opening its plan; Edit my brand beside it.
+// My cities (group 3 #5): the brand's cities, each opening its plan; Edit my brand beside it. Delete (Jard 10-29): each
+// brand on the device with its cities, a Delete on every city and brand (mountCities); "My brands and cities" when more
+// than one brand is saved.
 function renderCities(root) {
   const b = savedBrand();
+  const title = () => (new Set(store.list().map((r) => r.brand.trim().toLowerCase())).size > 1 ? "My brands and cities" : "My cities");
   root.innerHTML = `<div class="profile"><div class="pform cities">
-    <h2>My cities</h2>
-    <div class="editnote" role="status">${esc(String(b?.brand ?? "").trim() || "Your brand")} in every city: each city has its own days, start and plan. <a href="${BRAND_HREF}">Edit my brand</a></div>
+    <h2 id="cities-h">${title()}</h2>
+    <div class="editnote" role="status">${esc(String(b?.brand ?? "").trim() || "Your brand")} in every city: each city has its own days, start and plan. Open, edit or delete a city or a brand here.</div>
     <div id="cities-list"></div>
-    <div class="build"><a class="btn line" href="${esc(backTo())}">${lastPlan ? "Back to your plan" : "Back"}</a></div>
-    <div class="startover" id="startover"><button type="button" class="btn ghost sm" data-over="ask">Start over with another brand</button></div>
+    <div class="build"><a class="btn line" id="cities-back" href="${esc(backTo())}">${lastPlan ? "Back to your plan" : "Back"}</a></div>
   </div></div>`;
-  const list = mountCities($("#cities-list", root), citiesOpts(lastPlan));
+  const list = mountCities($("#cities-list", root), {
+    ...citiesOpts(lastPlan),
+    onCount: () => {
+      const h = $("#cities-h", root), back = $("#cities-back", root);
+      if (h) h.textContent = title();
+      if (back) Object.assign(back, { href: backTo(), textContent: lastPlan ? "Back to your plan" : "Back" });
+      document.title = `${title()} · Doors`;
+    },
+  });
   list.draw();
   citiesMounted.add(list);
-  // one brand on a device: another brand (an example, a second product) starts over, after a yes on the row itself
-  const over = $("#startover", root);
-  over.addEventListener("click", (e) => {
-    const act = e.target.closest("[data-over]")?.dataset.over;
-    if (act === "ask") over.innerHTML = `<span class="ptext">Delete your brand and every city on this device? Their plans, statuses, outcomes and contacts go too.</span> <button type="button" class="btn sm danger" data-over="yes">Delete everything</button> <button type="button" class="btn line sm" data-over="no">Keep</button>`;
-    else if (act === "no") over.innerHTML = `<button type="button" class="btn ghost sm" data-over="ask">Start over with another brand</button>`;
-    else if (act === "yes") {
-      for (const row of store.list()) store.remove(row.brand, row.city);
-      store.setBrand(null);
-      lastPlan = null;
-      startForm(emptyProfile());
-      router.go("new");
-    }
-    $("[data-over]", over)?.focus();
-  });
   return () => citiesMounted.delete(list);
 }
 
@@ -277,6 +309,9 @@ async function show(route) {
       brandHref: BRAND_HREF,
       // Your rules (brand-wide, every city) in Edit my brand: the store's own rules for that brand
       rules: mode === "brand" ? rulesOpts(keyOf(profile).brand) : null,
+      // Delete (Jard 10-29): Edit my brand deletes the brand and its cities; a saved city's form deletes that city
+      onDelete: mode === "brand" ? { ask: deleteBrandAsk(brandName(profile), store.list().filter((r) => sameBrand(r.brand, keyOf(profile).brand)).length), label: "Delete this brand", go: () => deleteBrand({ brand: keyOf(profile).brand, name: brandName(profile), rows: store.list().filter((r) => sameBrand(r.brand, keyOf(profile).brand)) }) }
+        : mode === "city" && editOf ? { ask: deleteCityAsk(brandName(profile), cityLabel(editOf, index, profile)), label: "Delete this city", go: () => deleteCity({ brand: editOf.brand, city: editOf.city, profile }, { name: brandName(profile) }) } : null,
       field,
       onChange: (p) => { if (mode === "all") saveDraft(p); drawBar(route); },
       onBuild: (p) => {
@@ -328,7 +363,7 @@ async function show(route) {
     const k = shown && keyOf(shown);
     // round 4 #6: pending: the change a Settings form just saved for this plan; onBrand: its brand fields applied (or
     // undone) in place go to the other cities; onProfile: the header follows the profile
-    const c = await renderPlan(view, { index, profile: shown, store, drive, nav: planNav, carry, params: route.params, alive: () => show.token === token, onUse: (p) => { startForm(p); router.go("new"); }, pending: k ? takePending(k) : null, onBrand: k ? (b) => saveBrand(b, { except: k.city }) : null, onProfile: () => drawBar(route) });
+    const c = await renderPlan(view, { index, profile: shown, store, drive, nav: planNav, carry, params: route.params, alive: () => show.token === token, onUse: (p) => { startForm(p); router.go("new"); }, pending: k ? takePending(k) : null, onBrand: k ? (b) => saveBrand(b, { except: k.city }) : null, onProfile: () => drawBar(route), onDelete: k ? () => deleteCity({ ...k, profile: shown }, { name: brandName(shown) }) : null });
     if (show.token === token) cleanup = c; else c();
   }
   view.focus({ preventScroll: true });

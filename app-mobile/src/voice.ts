@@ -4,7 +4,9 @@
 // (expo-speech) when the server's doesn't answer in time, is out of today's neurons, or the MP3 won't play.
 // EXPO_PUBLIC_SERVER_VOICE=0 at bundle time is the old device-voice-only phone (the switch for a build that must not
 // carry it). The audio session stays the app's (app.config.js withSpokenAudio: playback / spokenAudio, mixes with
-// music, plays with the silent switch on): nothing here calls setAudioModeAsync, which would replace it.
+// music, plays with the silent switch on): nothing here calls setAudioModeAsync, which would replace it. Nor
+// setActiveForLockScreen: a spoken line is not music, so no lock-screen / Control Center card on iOS and no media
+// notification on Android (Jard 10-29; test/nowplaying-voice.test.mjs holds it).
 import { Platform } from "react-native";
 import * as Speech from "expo-speech";
 import { createAudioPlayer, type AudioPlayer, type AudioStatus } from "expo-audio";

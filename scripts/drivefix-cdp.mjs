@@ -91,7 +91,8 @@ await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
   const play0 = HTMLMediaElement.prototype.play;
   const srcOf = (el) => (el.getAttribute("src") || el.src).replace(/^.*\\/audio\\//, "/audio/").replace(/^blob:.*$/, "blob").replace(/^data:.*$/, "silence");
   HTMLMediaElement.prototype.play = function () {
-    if (!this.__hooked) { this.__hooked = true; for (const k of ["ended", "pause", "error", "stalled"]) this.addEventListener(k, () => log.push({ [k]: srcOf(this), t: Math.round(this.currentTime * 10) / 10 })); }
+    if (!this.__hooked) { this.__hooked = true; for (const k of ["ended", "pause", "error", "stalled", "emptied"]) this.addEventListener(k, () => log.push({ [k]: srcOf(this) || this.__last, t: Math.round(this.currentTime * 10) / 10 })); }
+    this.__last = srcOf(this); // voice.js empties the element when a line ends or stops (Now Playing, Jard 10-29)
     log.push({ play: srcOf(this) });
     window.__audio = this;
     return play0.call(this);
@@ -150,7 +151,7 @@ const first = await curId();
 const logAt = (await L()).length;
 await click("[data-drive-done]");
 await sleep(300);
-check("Log visit stops the Agent's speech at once", (await phase()) === "listen" && (await L()).slice(logAt).some((e) => e.pause === "blob" || e.cancel), { phase: await phase(), log: (await L()).slice(logAt) });
+check("Log visit stops the Agent's speech at once", (await phase()) === "listen" && (await L()).slice(logAt).some((e) => e.pause === "blob" || e.emptied === "blob" || e.cancel), { phase: await phase(), log: (await L()).slice(logAt) });
 check("the sheet has no microphone of its own", await ev(`!!document.querySelector("[data-drive-sheet]") && !document.querySelector("[data-drive-sheet] [data-drive-mic], [data-drive-sheet] .dv-mic")`), null);
 check("the bar says what it listens for", /^Listening: say how it went at /.test(await status()), await status());
 check("the sheet says how to talk, in one line", /^Say how it went \(the bar at the bottom is listening\), or tap an answer\.$/.test(await ev(`document.querySelector("[data-drive-how]")?.textContent`)), await ev(`document.querySelector("[data-drive-how]")?.textContent`));

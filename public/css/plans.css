@@ -47,6 +47,13 @@ fieldset.product>legend{padding:0;margin-bottom:8px}
 .part[hidden]{display:none}
 .startover{margin-top:28px;padding-top:14px;border-top:1px solid var(--line2);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .startover .ptext{flex:1 1 260px}
+/* Delete (Jard 10-29): My cities groups each brand with its cities; a brand's head carries Edit brand and Delete brand */
+.pbrand{margin:0 0 22px}
+.pbrand+.pbrand{padding-top:16px;border-top:1px solid var(--line)}
+.pbhead{display:flex;align-items:center;gap:12px;margin:0 0 4px}
+.pbhead h3{flex:1;min-width:0;margin:0;font-size:16px;overflow-wrap:anywhere}
+.pbhead.ask{background:var(--amber-soft);border-radius:10px;padding:10px 12px;flex-wrap:wrap}
+@media (max-width:520px){.pbhead{flex-wrap:wrap;gap:6px}.pbhead h3{flex:1 1 100%}}
 @media (max-width:520px){.row3{grid-template-columns:1fr;gap:10px}}
 
 /* r2 (Jard 10-24): variations, Required marks, the "Still needed" button */

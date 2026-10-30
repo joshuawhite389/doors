@@ -8,6 +8,8 @@
 //   3. → when the reading ends it listens again; a quiet gap keeps it listening (never "stopped")
 //   4. the mic → "Mic off"; again → listening; Type → the chat panel (the bar paused, listening again after)
 //   5. Read it to me → pressed, "Reading…" and a Stop; back to normal when the reading ends
+//   Now Playing (Jard 10-29): after each line (and after Stop) the one <audio> has no source and navigator.mediaSession is
+//      empty, so iPhone keeps no "Your plan · Doors" lock-screen card; the same element plays every line
 //   6. Mic off = Voice off, remembered; the bar stays up and says so (r8hf: never the chat box without a word); Type
 //      opens the chat panel
 // The browser's speech is stubbed (window.__says: what each listen hears; "" = nothing). The page can't record here
@@ -89,11 +91,15 @@ await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
   const play0 = HTMLMediaElement.prototype.play;
   const srcOf = (el) => (el.getAttribute("src") || el.src).replace(/^.*\\/audio\\//, "/audio/").replace(/^blob:.*$/, "blob").replace(/^data:.*$/, "silence");
   HTMLMediaElement.prototype.play = function () {
-    if (!this.__hooked) { this.__hooked = true; for (const k of ["ended", "pause", "error", "stalled"]) this.addEventListener(k, () => log.push({ [k]: srcOf(this), t: Math.round(this.currentTime * 10) / 10 })); }
+    if (!this.__hooked) { this.__hooked = true; window.__elements = (window.__elements ?? 0) + 1; for (const k of ["ended", "pause", "error", "stalled", "emptied"]) this.addEventListener(k, () => log.push({ [k]: srcOf(this) || this.__last, t: Math.round(this.currentTime * 10) / 10 })); }
+    this.__last = srcOf(this); // the clip it is on: voice.js empties the element at "ended" before this hook's listener runs
     log.push({ play: srcOf(this) });
     window.__audio = this;
     return play0.call(this);
   };
+  // Now Playing (Jard 10-29): a title the page's media session starts with, so the check sees voice.js clear it
+  try { navigator.mediaSession.metadata = new MediaMetadata({ title: "Your plan · Doors" }); navigator.mediaSession.playbackState = "playing"; } catch {}
+  window.__nowPlaying = () => { const a = window.__audio, m = navigator.mediaSession; return { src: a ? a.hasAttribute("src") : null, paused: a ? a.paused : null, metadata: m ? m.metadata : undefined, state: m ? m.playbackState : undefined, elements: window.__elements }; };
   window.__phases = []; // every hands-free phase, in order
   new MutationObserver((ms) => { for (const m of ms) if (m.target.classList?.contains("hf")) { const p = m.target.dataset.phase; if (window.__phases.at(-1) !== p) window.__phases.push(p); } }).observe(document, { subtree: true, attributes: true, attributeFilter: ["data-phase"] });
   // the browser's recognizer: each start hears the next of __says ("" = nothing said: no-speech, then end)
@@ -143,6 +149,11 @@ await waitFor(`window.__log.filter((e) => e.rec === "start").length >= ${nStart 
 check("listens again after the answer, for a follow-up", (await L()).findLastIndex((e) => e.rec === "start" && e.hears === "") > (await L()).findIndex((e) => e.play === "blob") && (await L()).some((e) => e.ended === "blob"), await L());
 await waitFor(`window.__log.filter((e) => e.rec === "start").length >= ${nStart + 2}`, 8000);
 check("a quiet gap keeps it listening (never stopped)", (await phase()) === "listen" && !(await ev("window.__phases")).includes("stopped"), { phases: await ev("window.__phases"), audio: await ev(`(() => { const a = window.__audio; return a ? { src: a.src.slice(0, 30), t: a.currentTime, paused: a.paused, ended: a.ended, rs: a.readyState, ns: a.networkState, err: a.error && a.error.code, dur: a.duration } : null; })()`) });
+// Now Playing (Jard 10-29): the answer over, the one <audio> holds no source (iPhone drops the lock-screen card) and the
+// page's media session is empty; the same element played the silence, the ack and the answer (the tap's unlock holds)
+const np1 = await ev("window.__nowPlaying()");
+check("after the answer: no source on the <audio>, media session cleared (no Now Playing card)", np1.src === false && np1.paused === true && np1.metadata === null && np1.state === "none", np1);
+check("one <audio> for the silence, the ack and the answer (hands-free replay with no tap)", np1.elements === 1 && (await L()).some((e) => e.play === "silence") && (await L()).some((e) => /^\/audio\/ack\//.test(e.play ?? "")) && (await L()).some((e) => e.play === "blob"), { elements: np1.elements, plays: (await L()).filter((e) => e.play) });
 await shot("04-listening-again");
 check("the turn is kept in the chat", /tell me about my next stop/.test(await ev(`Object.keys(sessionStorage).filter((k) => k.includes("chat")).map((k) => sessionStorage.getItem(k)).join(" ")`) ?? ""), null);
 // 4. the mic → Mic off; again → listening; Type → the chat panel, the bar paused, listening again when it closes
@@ -169,7 +180,16 @@ check("Read it to me: pressed, Reading…, a Stop", await ev(`(() => { const b =
 check("the reading is the Worker's voice on the <audio>", (await L()).slice(logBefore).some((e) => e.play === "blob"), (await L()).slice(logBefore));
 await waitFor(`document.querySelector("[data-drive-read]")?.getAttribute("aria-pressed") === "false"`, 8000);
 check("back to Read it to me when the reading ends", await ev(`/Read it to me/.test(document.querySelector("[data-drive-read]").textContent) && !document.querySelector("[data-drive-stopread]")`), null);
+const np2 = await ev("window.__nowPlaying()");
+check("after Read it to me: no source on the <audio>, media session cleared", np2.src === false && np2.metadata === null && np2.state === "none" && np2.elements === 1, np2);
 await shot("07-read-done");
+// Stop mid-reading: the element lets go of the line at once
+await click("[data-drive-read]");
+await waitFor(`!!document.querySelector("[data-drive-stopread]") && !!window.__audio && !window.__audio.paused`, 8000);
+await click("[data-drive-stopread]");
+await sleep(300);
+const np3 = await ev("window.__nowPlaying()");
+check("Stop mid-reading: no source on the <audio>, media session cleared", np3.src === false && np3.paused === true && np3.metadata === null && np3.state === "none", np3);
 // 6. Mic off is Voice off (remembered); Type still opens the chat panel
 await click("[data-hf-big]");
 await sleep(200);
